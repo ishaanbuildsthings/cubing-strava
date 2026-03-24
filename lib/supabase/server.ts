@@ -9,6 +9,15 @@ import { publicEnv } from "@/lib/env";
 // current user from cookies) — never for data fetching. All data access
 // goes through Prisma.
 //
+// This is a FUNCTION, not a singleton — each request gets its own client
+// wired to its own cookies. A shared global would read the wrong user's
+// cookies.
+//
+// cookies() is a Next.js function that uses AsyncLocalStorage to access
+// the current request's cookies. It only works within the request
+// lifecycle (server components, API routes, tRPC handlers). Calling it
+// outside a request (e.g. a background job) would throw an error.
+//
 // "server-only" import prevents client components from importing this.
 // Client components use lib/supabase/browser.ts instead.
 export async function createServerSupabaseClient() {
