@@ -1,22 +1,39 @@
 import { z } from "zod";
 
-const envSchema = z.object({
-  DATABASE_URL: z.string().url(),
-  DIRECT_URL: z.string().url(),
+// Public env vars — available in both browser and Edge middleware.
+const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+});
+
+// Server-only env vars — only available in Node.js runtime (API routes,
+// server components), NOT in Edge middleware or the browser.
+const serverEnvSchema = publicEnvSchema.extend({
+  DATABASE_URL: z.string().url(),
+  DIRECT_URL: z.string().url(),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
 });
 
-export type Env = z.infer<typeof envSchema>;
+export type PublicEnv = z.infer<typeof publicEnvSchema>;
+export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
-let _env: Env | undefined;
+let _publicEnv: PublicEnv | undefined;
+let _serverEnv: ServerEnv | undefined;
 
-export function env(): Env {
-  if (!_env) {
-    _env = envSchema.parse(process.env);
+// Safe to call from Edge middleware and client code.
+export function publicEnv(): PublicEnv {
+  if (!_publicEnv) {
+    _publicEnv = publicEnvSchema.parse(process.env);
   }
-  return _env;
+  return _publicEnv;
+}
+
+// Only call from Node.js server code (API routes, server components).
+export function env(): ServerEnv {
+  if (!_serverEnv) {
+    _serverEnv = serverEnvSchema.parse(process.env);
+  }
+  return _serverEnv;
 }

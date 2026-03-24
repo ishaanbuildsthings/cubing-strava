@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { publicEnv } from "@/lib/env";
 
 // Refreshes expired Supabase auth tokens on every request.
 // Uses its own Supabase client (not lib/supabase/server.ts) because
@@ -8,8 +9,8 @@ export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    publicEnv().NEXT_PUBLIC_SUPABASE_URL,
+    publicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
