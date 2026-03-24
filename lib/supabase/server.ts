@@ -18,28 +18,36 @@ export async function createServerSupabaseClient() {
     publicEnv().NEXT_PUBLIC_SUPABASE_URL,
     publicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
-      // @supabase/ssr requires you to tell it how to read/write cookies,
-      // since every framework does it differently. In Next.js, we use the
-      // cookies() API from next/headers.
+      // @supabase/ssr needs to know how to read/write cookies in this
+      // framework. You never call getAll/setAll yourself — the Supabase
+      // client calls them internally when you use methods like
+      // supabase.auth.getUser().
       cookies: {
-        // Supabase calls this to read the JWT + refresh token from the
-        // incoming request cookies — this is how it knows who the user is.
+        // Called internally by Supabase when it needs the JWT/refresh
+        // token. For example, when auth.status calls getUser(), the
+        // library calls getAll() to find the token cookie, reads the
+        // JWT, and uses it to identify the user.
         getAll() {
           return cookieStore.getAll();
         },
-        // Supabase calls this when it refreshes a token and needs to
-        // write the updated token back. But in server components, cookies
-        // are read-only (can't modify the response), so this silently
-        // fails. The proxy (proxy.ts) handles the actual cookie writing.
+        // Called internally by Supabase when it refreshes an expiring
+        // token and needs to persist the new JWT. For example, if
+        // getUser() detects the JWT is about to expire, the library
+        // refreshes it and calls setAll() to write the new token cookie.
+        //
+        // This works in API routes and the proxy (they can set response
+        // headers), but FAILS in server components (which are read-only
+        // — they render HTML and can't modify headers). The try/catch
+        // silently swallows the error. This is safe because the proxy
+        // already handles token refresh before server components run.
         setAll(cookiesToSet) {
           try {
             for (const { name, value, options } of cookiesToSet) {
               cookieStore.set(name, value, options);
             }
           } catch {
-            // setAll is called from Server Components where cookies are
-            // read-only. This is safe to ignore — the proxy handles
-            // token refresh and sets updated cookies on the response.
+            // Silently fails in server components where cookies are
+            // read-only. The proxy handles token refresh instead.
           }
         },
       },
