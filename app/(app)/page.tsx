@@ -225,9 +225,8 @@ export default function TimerPage() {
 
       if (s === "running") {
         stopTimer();
-      } else if (s === "stopped") {
-        setState("idle");
-      } else if (s === "idle") {
+      } else if (s === "idle" || s === "stopped") {
+        // From idle or stopped, start the next solve sequence.
         if (settingsRef.current.useInspection) {
           startInspection();
         } else {
