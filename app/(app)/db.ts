@@ -108,7 +108,7 @@ async function updateStatsInTx(
 ): Promise<EventStats> {
   const solves = await getAllSolvesForEvent(tx, event);
   const meta = getEventMeta(event);
-  const stats = recomputeStats(event, solves, meta.useMo3);
+  const stats = recomputeStats(event, solves, meta.stats);
   const statsStore = tx.objectStore(STATS_STORE);
   statsStore.put(stats);
   return stats;

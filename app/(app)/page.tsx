@@ -187,19 +187,18 @@ export default function TimerPage() {
         {/* Stats display */}
         {stats && (
           <div className="flex gap-4 text-xs text-muted-foreground">
-            {eventMeta.useMo3 ? (
-              <>
-                <span>mo3: {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}</span>
-                <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
-                <span>best mo3: {stats.bestMo3 !== null ? formatTime(stats.bestMo3) : "-"}</span>
-              </>
-            ) : (
-              <>
-                <span>ao5: {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}</span>
-                <span>ao12: {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}</span>
-                <span>ao100: {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}</span>
-                <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
-              </>
+            <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
+            {eventMeta.stats.includes("ao5") && (
+              <span>ao5: {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}</span>
+            )}
+            {eventMeta.stats.includes("ao12") && (
+              <span>ao12: {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}</span>
+            )}
+            {eventMeta.stats.includes("ao100") && (
+              <span>ao100: {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}</span>
+            )}
+            {eventMeta.stats.includes("mo3") && (
+              <span>mo3: {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}</span>
             )}
           </div>
         )}

@@ -1,4 +1,5 @@
 import type { Penalty } from "@/app/(app)/db";
+import type { StatType } from "@/lib/cubing/events";
 
 // DNF is represented as Infinity so it naturally sorts to the end.
 const DNF = Infinity;
@@ -125,38 +126,25 @@ export interface EventStats {
 }
 
 // Recompute all stats from an array of solves (newest first).
-// Pass useMo3=true for BLD events.
+// Only computes stats listed in the enabledStats array.
 export function recomputeStats(
   event: string,
   solves: SolveForStats[],
-  useMo3: boolean
+  enabledStats: StatType[]
 ): EventStats {
+  const has = (s: StatType) => enabledStats.includes(s);
+
   const bestSingle = computeBestSingle(solves);
 
-  if (useMo3) {
-    const currentMo3 = computeMo3(solves);
-    const bestMo3 = findBestAverage(solves, (s) => computeMo3(s));
-    return {
-      event,
-      bestSingle,
-      bestAo5: null,
-      bestAo12: null,
-      bestAo100: null,
-      bestMo3,
-      currentAo5: null,
-      currentAo12: null,
-      currentAo100: null,
-      currentMo3,
-    };
-  }
+  const currentAo5 = has("ao5") ? computeAo5(solves) : null;
+  const currentAo12 = has("ao12") ? computeAo12(solves) : null;
+  const currentAo100 = has("ao100") ? computeAo100(solves) : null;
+  const currentMo3 = has("mo3") ? computeMo3(solves) : null;
 
-  const currentAo5 = computeAo5(solves);
-  const currentAo12 = computeAo12(solves);
-  const currentAo100 = computeAo100(solves);
-
-  const bestAo5 = findBestAverage(solves, computeAo5);
-  const bestAo12 = findBestAverage(solves, computeAo12);
-  const bestAo100 = findBestAverage(solves, (s) => computeAo100(s));
+  const bestAo5 = has("ao5") ? findBestAverage(solves, computeAo5) : null;
+  const bestAo12 = has("ao12") ? findBestAverage(solves, computeAo12) : null;
+  const bestAo100 = has("ao100") ? findBestAverage(solves, computeAo100) : null;
+  const bestMo3 = has("mo3") ? findBestAverage(solves, computeMo3) : null;
 
   return {
     event,
@@ -164,10 +152,10 @@ export function recomputeStats(
     bestAo5,
     bestAo12,
     bestAo100,
-    bestMo3: null,
+    bestMo3,
     currentAo5,
     currentAo12,
     currentAo100,
-    currentMo3: null,
+    currentMo3,
   };
 }
