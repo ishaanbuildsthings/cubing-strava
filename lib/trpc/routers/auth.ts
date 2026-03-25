@@ -46,9 +46,9 @@ export const authRouter = createTRPCRouter({
       return userToIUser(user);
     }),
 
-  // Returns auth status without throwing. Used to determine where to
-  // redirect: login, create-profile, or show the app.
-  status: baseProcedure.query(async ({ ctx }) => {
+  // Returns the current viewer's auth state without throwing. Used by
+  // (app)/layout.tsx to determine where to redirect.
+  whoAmI: baseProcedure.query(async ({ ctx }) => {
     const {
       data: { user: supabaseUser },
     } = await ctx.supabase.auth.getUser();
