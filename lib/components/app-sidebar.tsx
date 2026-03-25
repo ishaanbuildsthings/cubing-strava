@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, PanelLeft } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -42,7 +43,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -64,6 +65,9 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarTrigger className="w-full justify-start" />
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger render={<SidebarMenuButton />}>
