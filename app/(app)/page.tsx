@@ -6,12 +6,20 @@ import { getScramble } from "./actions";
 import {
   addSolve,
   clearSolves,
+  deleteSolve,
   getRecentSolves,
   getStats,
+  updateSolve,
   type Solve,
+  type Penalty,
 } from "./db";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP, type EventConfig } from "@/lib/cubing/events";
 import { effectiveTime, type EventStats } from "@/lib/cubing/stats";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type TimerState = "idle" | "ready" | "running" | "stopped";
 
@@ -111,6 +119,18 @@ export default function TimerPage() {
       setStats(newStats);
     });
   }, [elapsed]);
+
+  const handlePenalty = async (id: number, penalty: Penalty) => {
+    const { solve, stats: newStats } = await updateSolve(id, { penalty });
+    setSolves((prev) => prev.map((s) => (s.id === id ? solve : s)));
+    setStats(newStats);
+  };
+
+  const handleDelete = async (id: number) => {
+    const { stats: newStats } = await deleteSolve(id);
+    setSolves((prev) => prev.filter((s) => s.id !== id));
+    setStats(newStats);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -213,17 +233,48 @@ export default function TimerPage() {
         </p>
         <ul className="flex-1 overflow-y-auto min-h-0">
           {solves.map((solve, i) => (
-            <li
-              key={solve.id}
-              className="flex items-center justify-between px-3 py-1.5 text-sm border-b border-zinc-100 dark:border-zinc-800/60"
-            >
-              <span className="text-zinc-400 tabular-nums w-6 shrink-0">
-                {solves.length - i}
-              </span>
-              <span className="font-mono tabular-nums">
-                {formatSolveTime(solve)}
-              </span>
-            </li>
+            <Popover key={solve.id}>
+              <PopoverTrigger render={<li />} className="flex items-center justify-between px-3 py-1.5 text-sm border-b border-zinc-100 dark:border-zinc-800/60 cursor-pointer hover:bg-muted transition-colors w-full">
+                  <span className="text-zinc-400 tabular-nums w-6 shrink-0">
+                    {solves.length - i}
+                  </span>
+                  <span className="font-mono tabular-nums">
+                    {formatSolveTime(solve)}
+                  </span>
+              </PopoverTrigger>
+              <PopoverContent side="left" align="start" className="w-40 p-1">
+                <button
+                  className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors"
+                  onClick={() => {
+                    navigator.clipboard.writeText(solve.scramble);
+                  }}
+                >
+                  Copy scramble
+                </button>
+                <button
+                  className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors"
+                  onClick={() =>
+                    handlePenalty(solve.id, solve.penalty === "+2" ? null : "+2")
+                  }
+                >
+                  {solve.penalty === "+2" ? "Remove +2" : "+2"}
+                </button>
+                <button
+                  className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors"
+                  onClick={() =>
+                    handlePenalty(solve.id, solve.penalty === "dnf" ? null : "dnf")
+                  }
+                >
+                  {solve.penalty === "dnf" ? "Remove DNF" : "DNF"}
+                </button>
+                <button
+                  className="w-full text-left px-2 py-1.5 text-sm rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                  onClick={() => handleDelete(solve.id)}
+                >
+                  Delete
+                </button>
+              </PopoverContent>
+            </Popover>
           ))}
         </ul>
         <div className="p-2 border-t border-zinc-200 dark:border-zinc-800">
