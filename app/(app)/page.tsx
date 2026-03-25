@@ -221,49 +221,68 @@ export default function TimerPage() {
 
       {/* Right panel — stats + solves list */}
       <aside className="w-56 shrink-0 border-l border-border flex flex-col bg-card">
-        {/* Best stats */}
+        {/* Stats table — current & best */}
         {stats && (
           <div className="px-3 py-3 border-b border-border">
-            <p className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest mb-2">
-              🏅 Session Best
-            </p>
-            <div className="space-y-2">
+            {/* Header row */}
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 mb-1.5">
+              <span />
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest text-right">Current</span>
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest text-right">Best</span>
+            </div>
+            {/* Stat rows */}
+            <div className="space-y-1.5">
               {eventConfig.stats.includes("single") && (
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Single</span>
-                  <span className="font-mono tabular-nums text-sm font-bold">
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {solves.length > 0 ? formatSolveTime(solves[0]) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
                     {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}
                   </span>
                 </div>
               )}
               {eventConfig.stats.includes("mo3") && (
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Mo3</span>
-                  <span className="font-mono tabular-nums text-sm font-bold">
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
                     {stats.bestMo3 !== null ? formatTime(stats.bestMo3) : "-"}
                   </span>
                 </div>
               )}
               {eventConfig.stats.includes("ao5") && (
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Ao5</span>
-                  <span className="font-mono tabular-nums text-sm font-bold">
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
                     {stats.bestAo5 !== null ? formatTime(stats.bestAo5) : "-"}
                   </span>
                 </div>
               )}
               {eventConfig.stats.includes("ao12") && (
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Ao12</span>
-                  <span className="font-mono tabular-nums text-sm font-bold">
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
                     {stats.bestAo12 !== null ? formatTime(stats.bestAo12) : "-"}
                   </span>
                 </div>
               )}
               {eventConfig.stats.includes("ao100") && (
-                <div className="flex items-center justify-between">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Ao100</span>
-                  <span className="font-mono tabular-nums text-sm font-bold">
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
                     {stats.bestAo100 !== null ? formatTime(stats.bestAo100) : "-"}
                   </span>
                 </div>
