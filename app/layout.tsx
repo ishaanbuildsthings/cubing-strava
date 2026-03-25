@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description: "A social app for cubers",
 };
 
+// Root layout — wraps ALL pages (both (auth) and (app) route groups).
+// Only contains global providers and styles. Auth-specific UI (like the
+// header with sign-out button) lives in (app)/layout.tsx where the
+// ViewerProvider is available.
 export default function RootLayout({
   children,
 }: Readonly<{
