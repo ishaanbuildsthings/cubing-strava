@@ -20,7 +20,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { X, Copy, Trash2 } from "lucide-react";
+import { X, Copy, Check, Trash2, ChevronDown, Settings } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type TimerState = "idle" | "ready" | "running" | "stopped";
 
@@ -52,6 +65,9 @@ export default function TimerPage() {
   const [scramble, setScramble] = useState<string | null>(null);
   const [solves, setSolves] = useState<Solve[]>([]);
   const [stats, setStats] = useState<EventStats | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const startTimeRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const scrambleRef = useRef<string | null>(null);
@@ -61,6 +77,7 @@ export default function TimerPage() {
   // Load solves and scramble when event changes.
   useEffect(() => {
     selectedEventRef.current = selectedEvent;
+    setConfirmClear(false);
     getScramble(selectedEvent).then(setScramble);
     getRecentSolves(selectedEvent).then(setSolves);
     getStats(selectedEvent).then(setStats);
@@ -174,26 +191,54 @@ export default function TimerPage() {
   const eventConfig = EVENT_MAP[selectedEvent];
 
   return (
-    <div className="flex flex-1 overflow-hidden select-none">
-      {/* Timer area */}
-      <div className="flex flex-col flex-1 items-center justify-center gap-6">
-        {/* Event selector */}
-        <div className="flex flex-wrap justify-center gap-1 px-4">
-          {EVENT_CONFIGS.map((meta) => (
-            <button
-              key={meta.id}
-              onClick={() => setSelectedEvent(meta.id)}
-              className={`px-2 py-1 text-xs rounded transition-colors ${
-                selectedEvent === meta.id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {meta.name}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col flex-1 overflow-hidden select-none">
+      {/* Event selector — top bar */}
+      <div className="flex items-center px-4 py-2 border-b border-border">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted transition-colors">
+            <span className={`cubing-icon ${eventConfig.iconClass} text-lg`} />
+            <span className="font-bold">{eventConfig.name}</span>
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            {EVENT_CONFIGS.map((meta) => (
+              <DropdownMenuItem
+                key={meta.id}
+                onClick={() => setSelectedEvent(meta.id)}
+                className={selectedEvent === meta.id ? "bg-accent" : ""}
+              >
+                <span className={`cubing-icon ${meta.iconClass} text-base`} />
+                <span>{meta.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <button
+          className="ml-auto p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          title="Timer settings"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Settings className="w-4 h-4" />
+        </button>
 
+        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Timer Settings</DialogTitle>
+              <DialogDescription>
+                Configure your practice session.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 text-sm text-muted-foreground">
+              No settings available yet.
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Timer area */}
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 items-center justify-center gap-6">
         <p className="font-mono text-center text-lg max-w-xl px-4 min-h-[1.75rem]">
           {scramble ?? ""}
         </p>
@@ -203,125 +248,188 @@ export default function TimerPage() {
         >
           {formatTime(elapsed)}
         </p>
-        <p className="text-zinc-500 text-sm">{hint}</p>
+{/* hint removed */}
+        </div>
 
-        {/* Stats display */}
+      {/* Right panel — stats + solves list */}
+      <aside className="w-56 shrink-0 border-l border-border flex flex-col bg-card">
+        {/* Stats table — current & best */}
         {stats && (
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            {eventConfig.stats.includes("single") && (
-              <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
-            )}
-            {eventConfig.stats.includes("ao5") && (
-              <span>ao5: {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}</span>
-            )}
-            {eventConfig.stats.includes("ao12") && (
-              <span>ao12: {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}</span>
-            )}
-            {eventConfig.stats.includes("ao100") && (
-              <span>ao100: {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}</span>
-            )}
-            {eventConfig.stats.includes("mo3") && (
-              <span>mo3: {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}</span>
-            )}
+          <div className="border-b border-border">
+            <p className="px-3 pt-3 pb-1 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-base leading-none">📈</span> Stats
+            </p>
+            {/* Column headers */}
+            <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 px-3 pb-1">
+              <span />
+              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Current</span>
+              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Best</span>
+            </div>
+            {/* Stat rows */}
+            <div className="space-y-1.5 px-3 pb-3">
+              {eventConfig.stats.includes("single") && (
+                <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
+                  <span className="text-xs font-semibold text-muted-foreground">Single</span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {solves.length > 0 ? formatSolveTime(solves[0]) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}
+                  </span>
+                </div>
+              )}
+              {eventConfig.stats.includes("mo3") && (
+                <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
+                  <span className="text-xs font-semibold text-muted-foreground">Mo3</span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.bestMo3 !== null ? formatTime(stats.bestMo3) : "-"}
+                  </span>
+                </div>
+              )}
+              {eventConfig.stats.includes("ao5") && (
+                <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
+                  <span className="text-xs font-semibold text-muted-foreground">Ao5</span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.bestAo5 !== null ? formatTime(stats.bestAo5) : "-"}
+                  </span>
+                </div>
+              )}
+              {eventConfig.stats.includes("ao12") && (
+                <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
+                  <span className="text-xs font-semibold text-muted-foreground">Ao12</span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.bestAo12 !== null ? formatTime(stats.bestAo12) : "-"}
+                  </span>
+                </div>
+              )}
+              {eventConfig.stats.includes("ao100") && (
+                <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
+                  <span className="text-xs font-semibold text-muted-foreground">Ao100</span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}
+                  </span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.bestAo100 !== null ? formatTime(stats.bestAo100) : "-"}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
-
-      {/* Right panel — solves list */}
-      <aside className="w-48 shrink-0 border-l border-zinc-200 dark:border-zinc-800 flex flex-col">
-        <p className="px-3 py-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800">
-          Solves
+        <p className="px-3 py-2 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest border-b border-border flex items-center gap-1.5">
+          <span className="text-base leading-none">⏱️</span> Solves
         </p>
         <ul className="flex-1 overflow-y-auto min-h-0">
           {solves.map((solve, i) => (
             <Popover key={solve.id}>
-              <PopoverTrigger render={<li />} nativeButton={false} className="flex items-center justify-between px-3 py-1.5 text-sm border-b border-zinc-100 dark:border-zinc-800/60 cursor-pointer hover:bg-muted transition-colors w-full">
-                  <span className="text-zinc-400 tabular-nums w-6 shrink-0">
+              <PopoverTrigger render={<li />} nativeButton={false} className="flex items-center justify-between px-3 py-2 text-sm border-b border-border/40 cursor-pointer hover:bg-muted transition-colors w-full">
+                  <span className="text-muted-foreground tabular-nums text-xs w-6 shrink-0">
                     {solves.length - i}
                   </span>
-                  <span className="font-mono tabular-nums">
+                  <span className="font-mono tabular-nums font-semibold">
                     {formatSolveTime(solve)}
                   </span>
               </PopoverTrigger>
-              <PopoverContent side="left" align="start" className="w-64 p-3 space-y-3">
+              <PopoverContent side="left" align="center" className="w-72 p-4 space-y-3">
+                {/* Time + delete */}
+                <div className="flex items-center justify-between">
+                  <span className="font-mono tabular-nums text-lg font-bold">
+                    {formatSolveTime(solve)}
+                  </span>
+                  <button
+                    className="p-1.5 rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-400"
+                    onClick={() => handleDelete(solve.id)}
+                    title="Delete solve"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Scramble */}
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-mono text-xs text-muted-foreground break-all leading-relaxed flex-1">
+                  <p className="font-mono text-xs text-muted-foreground leading-relaxed">
                     {solve.scramble}
                   </p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                      onClick={() => navigator.clipboard.writeText(solve.scramble)}
-                      title="Copy scramble"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                    <PopoverTrigger render={<button />} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground" title="Close">
-                      <X className="w-3.5 h-3.5" />
-                    </PopoverTrigger>
-                  </div>
+                  <button
+                    className={`p-1 rounded-md transition-colors shrink-0 ${
+                      copiedId === solve.id
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => {
+                      navigator.clipboard.writeText(solve.scramble);
+                      setCopiedId(solve.id);
+                      setTimeout(() => setCopiedId(null), 1500);
+                    }}
+                    title="Copy scramble"
+                  >
+                    {copiedId === solve.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
 
                 {/* Penalty toggle */}
-                <div className="flex items-center gap-1">
-                  <button
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      solve.penalty === null
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted text-muted-foreground"
-                    }`}
-                    onClick={() => handlePenalty(solve.id, null)}
-                  >
-                    OK
-                  </button>
-                  <button
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      solve.penalty === "+2"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted text-muted-foreground"
-                    }`}
-                    onClick={() => handlePenalty(solve.id, "+2")}
-                  >
-                    +2
-                  </button>
-                  <button
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      solve.penalty === "dnf"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted text-muted-foreground"
-                    }`}
-                    onClick={() => handlePenalty(solve.id, "dnf")}
-                  >
-                    DNF
-                  </button>
+                <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+                  {([null, "+2", "dnf"] as const).map((p) => (
+                    <button
+                      key={p ?? "ok"}
+                      className={`flex-1 text-xs font-semibold py-1.5 rounded-md transition-colors ${
+                        solve.penalty === p
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() => handlePenalty(solve.id, p)}
+                    >
+                      {p === null ? "None" : p === "+2" ? "+2" : "DNF"}
+                    </button>
+                  ))}
                 </div>
-
-                {/* Delete */}
-                <button
-                  className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 transition-colors"
-                  onClick={() => handleDelete(solve.id)}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete
-                </button>
               </PopoverContent>
             </Popover>
           ))}
         </ul>
-        <div className="p-2 border-t border-zinc-200 dark:border-zinc-800">
-          <button
-            className="w-full text-xs text-zinc-400 hover:text-red-500 py-1 transition-colors"
-            onClick={() =>
-              clearSolves(selectedEvent).then((newStats) => {
-                setSolves([]);
-                setStats(newStats);
-              })
-            }
-          >
-            Reset
-          </button>
+        <div className="p-2 border-t border-border flex justify-center">
+          {confirmClear ? (
+            <div className="flex items-center gap-2">
+              <button
+                className="text-xs text-red-500 font-semibold py-1 px-3 rounded-md bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                onClick={() => {
+                  clearSolves(selectedEvent).then((newStats) => {
+                    setSolves([]);
+                    setStats(newStats);
+                    setConfirmClear(false);
+                  });
+                }}
+              >
+                Confirm
+              </button>
+              <button
+                className="text-xs text-muted-foreground py-1 px-3 rounded-md hover:bg-muted transition-colors"
+                onClick={() => setConfirmClear(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-500 py-1 px-3 rounded-md hover:bg-red-500/10 transition-colors"
+              onClick={() => setConfirmClear(true)}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear session
+            </button>
+          )}
         </div>
       </aside>
+      </div>
     </div>
   );
 }

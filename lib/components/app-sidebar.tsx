@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Timer, Rss, User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,8 +24,10 @@ import { useViewer } from "@/lib/hooks/useViewer";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const navItems = [
-  { label: "Timer", href: "/", icon: Timer },
-  { label: "Feed", href: "/feed", icon: Rss },
+  { label: "Practice", href: "/", icon: "⏱️" },
+  { label: "Home", href: "/home", icon: "🏠" },
+  { label: "Race", href: "/race", icon: "🏁" },
+  { label: "Tourney", href: "/tourney", icon: "🏆" },
 ];
 
 export function AppSidebar() {
@@ -40,7 +42,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="none">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -51,8 +53,8 @@ export function AppSidebar() {
                     render={<Link href={item.href} />}
                     isActive={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
                   >
-                    <item.icon />
-                    <span>{item.label}</span>
+                    <span className="text-xl leading-none">{item.icon}</span>
+                    <span className="text-base font-bold">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -61,34 +63,39 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<SidebarMenuButton />}>
-                <span className="truncate text-sm">@{viewer.username}</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-48">
-                <DropdownMenuItem
-                  render={<Link href={`/profile/${viewer.username}`} />}
-                >
-                  <User />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  render={<Link href="/settings" />}
-                >
-                  <Settings />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        {/* Floating profile card — Discord-style */}
+        <div className="mx-2 mb-2 rounded-lg bg-[oklch(0.18_0.005_60)] p-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<button />} className="flex items-center gap-2 w-full rounded-md px-1 py-1 hover:bg-[oklch(0.24_0.005_60)] transition-colors">
+              <div className="w-8 h-8 rounded-full bg-[oklch(0.32_0.006_60)] flex items-center justify-center text-xs font-bold shrink-0">
+                {viewer.username[0].toUpperCase()}
+              </div>
+              <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden">
+                <span className="text-sm font-semibold truncate w-full">{viewer.firstName}</span>
+                <span className="text-xs text-muted-foreground truncate w-full">@{viewer.username}</span>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-48">
+              <DropdownMenuItem
+                render={<Link href={`/profile/${viewer.username}`} />}
+              >
+                <User />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href="/settings" />}
+              >
+                <Settings />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
