@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { User, Settings, LogOut, PanelLeft } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -43,7 +42,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="none">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -64,11 +63,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarTrigger className="w-full justify-start" />
-          </SidebarMenuItem>
-        </SidebarMenu>
         {/* Floating profile card — Discord-style */}
         <div className="mx-2 mb-2 rounded-lg bg-[oklch(0.18_0.005_60)] p-2">
           <DropdownMenu>
