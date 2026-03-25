@@ -112,7 +112,7 @@ export default function TimerPage() {
     const INITIAL_SOLVES_LOADED = 100;
     getRecentSolves(selectedEvent, INITIAL_SOLVES_LOADED).then((loaded) => {
       setSolves(loaded);
-      setHasMore(loaded.length >= INITIAL_SOLVES_LOADED);
+      setHasMore(loaded.length === INITIAL_SOLVES_LOADED);
     });
     getStats(selectedEvent).then(setStats);
   }, [selectedEvent]);
@@ -238,7 +238,7 @@ export default function TimerPage() {
     const BATCH_SIZE = 50;
     const more = await loadMoreSolves(selectedEvent, oldestSolve.date, BATCH_SIZE);
     setSolves((prev) => [...prev, ...more]);
-    setHasMore(more.length >= BATCH_SIZE);
+    setHasMore(more.length === BATCH_SIZE);
     setLoadingMore(false);
   }, [loadingMore, hasMore, solves, selectedEvent]);
 
