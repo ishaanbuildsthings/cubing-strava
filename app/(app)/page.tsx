@@ -10,7 +10,7 @@ import {
   getStats,
   type Solve,
 } from "./db";
-import { CubeEvent, EVENTS_LIST, EVENT_MAP, type EventConfig } from "@/lib/cubing/events";
+import { CubeEvent, EVENT_CONFIGS, EVENT_MAP, type EventConfig } from "@/lib/cubing/events";
 import { effectiveTime, type EventStats } from "@/lib/cubing/stats";
 
 type TimerState = "idle" | "ready" | "running" | "stopped";
@@ -158,7 +158,7 @@ export default function TimerPage() {
       <div className="flex flex-col flex-1 items-center justify-center gap-6">
         {/* Event selector */}
         <div className="flex flex-wrap justify-center gap-1 px-4">
-          {EVENTS_LIST.map((meta) => (
+          {EVENT_CONFIGS.map((meta) => (
             <button
               key={meta.id}
               onClick={() => setSelectedEvent(meta.id)}

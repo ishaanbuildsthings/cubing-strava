@@ -1,5 +1,5 @@
 import type { CubeEvent } from "@/lib/cubing/events";
-import { getEventConfig } from "@/lib/cubing/events";
+import { EVENT_MAP } from "@/lib/cubing/events";
 import { recomputeStats, type EventStats } from "@/lib/cubing/stats";
 
 const DB_NAME = "cubing-timer";
@@ -107,8 +107,7 @@ async function updateStatsInTx(
   event: CubeEvent
 ): Promise<EventStats> {
   const solves = await getAllSolvesForEvent(tx, event);
-  const eventConfig = getEventConfig(event);
-  const stats = recomputeStats(event, solves, eventConfig.stats);
+  const stats = recomputeStats(event, solves, EVENT_MAP[event].stats);
   const statsStore = tx.objectStore(STATS_STORE);
   statsStore.put(stats);
   return stats;

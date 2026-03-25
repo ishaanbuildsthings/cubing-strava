@@ -29,7 +29,7 @@ export interface EventConfig {
 const STANDARD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12", "ao100"];
 const BLD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12"];
 
-export const EVENTS_LIST: EventConfig[] = [
+export const EVENT_CONFIGS: EventConfig[] = [
   { id: CubeEvent.TWO, name: "2x2", stats: STANDARD_STATS },
   { id: CubeEvent.THREE, name: "3x3", stats: STANDARD_STATS },
   { id: CubeEvent.FOUR, name: "4x4", stats: STANDARD_STATS },
@@ -48,9 +48,6 @@ export const EVENTS_LIST: EventConfig[] = [
 ];
 
 export const EVENT_MAP: Record<CubeEvent, EventConfig> = Object.fromEntries(
-  EVENTS_LIST.map((e) => [e.id, e])
+  EVENT_CONFIGS.map((e) => [e.id, e])
 ) as Record<CubeEvent, EventConfig>;
 
-export function getEventConfig(event: CubeEvent): EventConfig {
-  return EVENT_MAP[event];
-}
