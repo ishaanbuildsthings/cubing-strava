@@ -20,7 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { X, Copy, Trash2, ChevronDown } from "lucide-react";
+import { X, Copy, Trash2, ChevronDown, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -204,6 +204,12 @@ export default function TimerPage() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <button
+          className="ml-auto p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          title="Timer settings"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Timer area */}
@@ -306,62 +312,50 @@ export default function TimerPage() {
                     {formatSolveTime(solve)}
                   </span>
               </PopoverTrigger>
-              <PopoverContent side="left" align="center" className="w-72 p-0 overflow-hidden">
-                {/* Header — time + close */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <PopoverContent side="left" align="center" className="w-72 p-4 space-y-3">
+                {/* Time + delete */}
+                <div className="flex items-center justify-between">
                   <span className="font-mono tabular-nums text-lg font-bold">
                     {formatSolveTime(solve)}
                   </span>
-                  <PopoverTrigger render={<button />} className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-                    <X className="w-4 h-4" />
-                  </PopoverTrigger>
+                  <button
+                    className="p-1.5 rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-400"
+                    onClick={() => handleDelete(solve.id)}
+                    title="Delete solve"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {/* Scramble */}
-                <div className="px-4 py-3 border-b border-border bg-muted/30">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-xs text-muted-foreground leading-relaxed">
-                      {solve.scramble}
-                    </p>
-                    <button
-                      className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
-                      onClick={() => navigator.clipboard.writeText(solve.scramble)}
-                      title="Copy scramble"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-mono text-xs text-muted-foreground leading-relaxed">
+                    {solve.scramble}
+                  </p>
+                  <button
+                    className="p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+                    onClick={() => navigator.clipboard.writeText(solve.scramble)}
+                    title="Copy scramble"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
                 {/* Penalty toggle */}
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Penalty</p>
-                  <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
-                    {([null, "+2", "dnf"] as const).map((p) => (
-                      <button
-                        key={p ?? "ok"}
-                        className={`flex-1 text-xs font-semibold py-1.5 rounded-md transition-colors ${
-                          solve.penalty === p
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                        onClick={() => handlePenalty(solve.id, p)}
-                      >
-                        {p === null ? "None" : p === "+2" ? "+2" : "DNF"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Delete */}
-                <div className="px-4 py-2.5">
-                  <button
-                    className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors"
-                    onClick={() => handleDelete(solve.id)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Delete solve
-                  </button>
+                <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+                  {([null, "+2", "dnf"] as const).map((p) => (
+                    <button
+                      key={p ?? "ok"}
+                      className={`flex-1 text-xs font-semibold py-1.5 rounded-md transition-colors ${
+                        solve.penalty === p
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      onClick={() => handlePenalty(solve.id, p)}
+                    >
+                      {p === null ? "None" : p === "+2" ? "+2" : "DNF"}
+                    </button>
+                  ))}
                 </div>
               </PopoverContent>
             </Popover>
