@@ -2,7 +2,7 @@
 
 import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { randomScrambleForEvent } from "cubing/scramble";
+import { generateScramble } from "@/lib/cubing/scramble";
 import {
   addSolve,
   clearSolves,
@@ -78,7 +78,7 @@ export default function TimerPage() {
   useEffect(() => {
     selectedEventRef.current = selectedEvent;
     setConfirmClear(false);
-    randomScrambleForEvent(selectedEvent).then(alg => alg.toString()).then(setScramble);
+    Promise.resolve(generateScramble(selectedEvent)).then(setScramble);
     getRecentSolves(selectedEvent).then(setSolves);
     getStats(selectedEvent).then(setStats);
   }, [selectedEvent]);
@@ -121,7 +121,7 @@ export default function TimerPage() {
     setState("stopped");
 
     const event = selectedEventRef.current;
-    randomScrambleForEvent(event).then(alg => alg.toString()).then(setScramble);
+    Promise.resolve(generateScramble(event)).then(setScramble);
 
     const prevBest =
       solvesRef.current.length > 0
