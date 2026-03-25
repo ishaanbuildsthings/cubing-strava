@@ -235,7 +235,7 @@ export default function TimerPage() {
         <ul className="flex-1 overflow-y-auto min-h-0">
           {solves.map((solve, i) => (
             <Popover key={solve.id}>
-              <PopoverTrigger render={<li />} className="flex items-center justify-between px-3 py-1.5 text-sm border-b border-zinc-100 dark:border-zinc-800/60 cursor-pointer hover:bg-muted transition-colors w-full">
+              <PopoverTrigger render={<li />} nativeButton={false} className="flex items-center justify-between px-3 py-1.5 text-sm border-b border-zinc-100 dark:border-zinc-800/60 cursor-pointer hover:bg-muted transition-colors w-full">
                   <span className="text-zinc-400 tabular-nums w-6 shrink-0">
                     {solves.length - i}
                   </span>
