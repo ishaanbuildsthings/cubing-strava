@@ -4,8 +4,13 @@ import { recomputeStats, type EventStats } from "@/lib/cubing/stats";
 
 const DB_NAME = "cubing-timer";
 const DB_VERSION = 1;
-const SOLVES_STORE = "solves"; // IDB table for individual solves
-const STATS_STORE = "stats"; // IDB table for precomputed per-event averages
+
+// IDB store names
+const SOLVES_STORE = "solves"; // individual solves, keyed by auto-increment id
+const STATS_STORE = "stats"; // precomputed per-event averages, keyed by event
+
+// IDB index name for querying solves by event + date
+const SOLVES_BY_EVENT_DATE = "by-event-date";
 
 export type Penalty = "+2" | "dnf" | null;
 
@@ -30,7 +35,7 @@ function openDB(): Promise<IDBDatabase> {
         keyPath: "id",
         autoIncrement: true,
       });
-      solvesStore.createIndex("by-event-date", ["event", "date"]);
+      solvesStore.createIndex(SOLVES_BY_EVENT_DATE, ["event", "date"]);
       db.createObjectStore(STATS_STORE, { keyPath: "event" });
     };
     req.onsuccess = () => resolve(req.result);
@@ -47,7 +52,7 @@ export async function getRecentSolves(
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(SOLVES_STORE, "readonly");
-    const index = tx.objectStore(SOLVES_STORE).index("by-event-date");
+    const index = tx.objectStore(SOLVES_STORE).index(SOLVES_BY_EVENT_DATE);
 
     // Range: all entries where event matches, any date.
     const range = IDBKeyRange.bound([event, 0], [event, Infinity]);
@@ -76,7 +81,7 @@ async function getAllSolvesForEvent(
   event: CubeEvent
 ): Promise<Solve[]> {
   return new Promise((resolve, reject) => {
-    const index = tx.objectStore(SOLVES_STORE).index("by-event-date");
+    const index = tx.objectStore(SOLVES_STORE).index(SOLVES_BY_EVENT_DATE);
     const range = IDBKeyRange.bound([event, 0], [event, Infinity]);
     const results: Solve[] = [];
 
@@ -210,7 +215,7 @@ export async function clearSolves(event: CubeEvent): Promise<EventStats> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction([SOLVES_STORE, STATS_STORE], "readwrite");
-    const index = tx.objectStore(SOLVES_STORE).index("by-event-date");
+    const index = tx.objectStore(SOLVES_STORE).index(SOLVES_BY_EVENT_DATE);
     const statsStore = tx.objectStore(STATS_STORE);
 
     // Delete all solves for this event using a cursor.
