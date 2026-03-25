@@ -26,9 +26,8 @@ export interface Solve {
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    // Only fires on first visit (database doesn't exist yet) or when
-    // DB_VERSION is bumped. Existing data is preserved on upgrades —
-    // this is where we define/modify the schema, not wipe anything.
+    // Only fires on first visit (database doesn't exist yet).
+    // When we need to migrate, we'll add version checks here.
     req.onupgradeneeded = () => {
       const db = req.result;
       const solvesStore = db.createObjectStore(SOLVES_STORE, {
