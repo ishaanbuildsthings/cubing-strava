@@ -239,7 +239,7 @@ export default function TimerPage() {
             {/* Column headers */}
             <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 px-3 pb-1">
               <span />
-              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Cur</span>
+              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Current</span>
               <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Best</span>
             </div>
             {/* Stat rows */}
