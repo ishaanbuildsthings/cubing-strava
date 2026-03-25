@@ -180,7 +180,7 @@ export default function TimerPage() {
 
   // Begin hold sequence — start hold timer for delay.
   const beginHold = useCallback(() => {
-    const delay = settingsRef.current.holdDelay;
+    const delay = settingsRef.current.holdDelayMs;
     holdStartRef.current = Date.now();
 
     if (delay === 0) {
@@ -321,8 +321,8 @@ export default function TimerPage() {
                 </div>
                 <select
                   className="bg-muted rounded-md px-2 py-1 text-sm"
-                  value={timerSettings.holdDelay}
-                  onChange={(e) => updateTimerSettings({ holdDelay: Number(e.target.value) })}
+                  value={timerSettings.holdDelayMs}
+                  onChange={(e) => updateTimerSettings({ holdDelayMs: Number(e.target.value) })}
                 >
                   <option value={0}>None</option>
                   <option value={300}>0.3s</option>
@@ -386,7 +386,7 @@ export default function TimerPage() {
           style={{ fontSize: "clamp(3rem, 15vw, 8rem)" }}
         >
           {state === "inspecting" || ((state === "holding" || state === "ready") && inspectionStartRef.current !== null)
-            ? Math.max(0, Math.ceil((timerSettings.inspectionDuration - inspectionTime) / 1000))
+            ? Math.max(0, Math.ceil((timerSettings.inspectionDurationMs - inspectionTime) / 1000))
             : state === "running" && !timerSettings.showTimerWhileRunning
               ? "Solve!"
               : formatTime(elapsed)}

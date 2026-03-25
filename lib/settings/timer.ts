@@ -5,19 +5,19 @@
 
 export interface TimerSettings {
   /** How long (ms) the spacebar must be held before the timer is ready. */
-  holdDelay: number;
+  holdDelayMs: number;
   /** Whether to show WCA 15s inspection countdown before timing. */
   useInspection: boolean;
   /** Duration (ms) of inspection if enabled. */
-  inspectionDuration: number;
+  inspectionDurationMs: number;
   /** Whether to show the running time while timing (false = hide until stop). */
   showTimerWhileRunning: boolean;
 }
 
 export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
-  holdDelay: 300,
+  holdDelayMs: 300,
   useInspection: false,
-  inspectionDuration: 15000,
+  inspectionDurationMs: 15000,
   showTimerWhileRunning: true,
 };
 
