@@ -391,7 +391,7 @@ export default function TimerPage() {
           {state === "inspecting"
             ? Math.max(0, Math.ceil((timerSettings.inspectionDuration - inspectionTime) / 1000))
             : state === "running" && !timerSettings.showTimerWhileRunning
-              ? "..."
+              ? "Solve!"
               : formatTime(elapsed)}
         </p>
         </div>
