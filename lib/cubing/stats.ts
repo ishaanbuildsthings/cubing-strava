@@ -16,20 +16,35 @@ export function effectiveTime(solve: SolveForStats): number {
   return solve.timeMs;
 }
 
-// Compute a trimmed average-of-N.
-// Removes 1 best and 1 worst (for ao5/ao12), then averages the rest.
+// Compute average-of-5.
+// Removes 1 best and 1 worst, averages middle 3.
 // If more than 1 solve is DNF, the whole average is DNF.
 // Returns null if not enough solves.
-function computeAo5or12(solves: SolveForStats[], n: 5 | 12): number | null {
-  if (solves.length < n) return null;
-  const recent = solves.slice(0, n);
-  const times = recent.map(effectiveTime);
+function computeAo5(solves: SolveForStats[]): number | null {
+  if (solves.length < 5) return null;
+  const times = solves.slice(0, 5).map(effectiveTime);
 
   const dnfCount = times.filter((t) => t === DNF).length;
   if (dnfCount > 1) return DNF;
 
   const sorted = [...times].sort((a, b) => a - b);
-  // Remove best and worst
+  const trimmed = sorted.slice(1, -1);
+  const sum = trimmed.reduce((a, b) => a + b, 0);
+  return Math.round(sum / trimmed.length);
+}
+
+// Compute average-of-12.
+// Removes 1 best and 1 worst, averages middle 10.
+// If more than 1 solve is DNF, the whole average is DNF.
+// Returns null if not enough solves.
+function computeAo12(solves: SolveForStats[]): number | null {
+  if (solves.length < 12) return null;
+  const times = solves.slice(0, 12).map(effectiveTime);
+
+  const dnfCount = times.filter((t) => t === DNF).length;
+  if (dnfCount > 1) return DNF;
+
+  const sorted = [...times].sort((a, b) => a - b);
   const trimmed = sorted.slice(1, -1);
   const sum = trimmed.reduce((a, b) => a + b, 0);
   return Math.round(sum / trimmed.length);
@@ -135,12 +150,12 @@ export function recomputeStats(
     };
   }
 
-  const currentAo5 = computeAo5or12(solves, 5);
-  const currentAo12 = computeAo5or12(solves, 12);
+  const currentAo5 = computeAo5(solves);
+  const currentAo12 = computeAo12(solves);
   const currentAo100 = computeAo100(solves);
 
-  const bestAo5 = findBestAverage(solves, (s) => computeAo5or12(s, 5));
-  const bestAo12 = findBestAverage(solves, (s) => computeAo5or12(s, 12));
+  const bestAo5 = findBestAverage(solves, computeAo5);
+  const bestAo12 = findBestAverage(solves, computeAo12);
   const bestAo100 = findBestAverage(solves, (s) => computeAo100(s));
 
   return {
