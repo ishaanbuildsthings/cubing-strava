@@ -187,7 +187,9 @@ export default function TimerPage() {
         {/* Stats display */}
         {stats && (
           <div className="flex gap-4 text-xs text-muted-foreground">
-            <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
+            {eventMeta.stats.includes("single") && (
+              <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
+            )}
             {eventMeta.stats.includes("ao5") && (
               <span>ao5: {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}</span>
             )}

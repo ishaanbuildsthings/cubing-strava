@@ -18,7 +18,7 @@ export enum CubeEvent {
   CLOCK = "clock",
 }
 
-export type StatType = "ao5" | "ao12" | "ao100" | "mo3";
+export type StatType = "single" | "ao5" | "ao12" | "ao100" | "mo3";
 
 export interface EventMeta {
   id: CubeEvent;
@@ -26,8 +26,8 @@ export interface EventMeta {
   stats: StatType[];
 }
 
-const STANDARD_STATS: StatType[] = ["ao5", "ao12", "ao100"];
-const BLD_STATS: StatType[] = ["mo3", "ao5", "ao12"];
+const STANDARD_STATS: StatType[] = ["single", "ao5", "ao12", "ao100"];
+const BLD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12"];
 
 export const EVENTS_LIST: EventMeta[] = [
   { id: CubeEvent.TWO, name: "2x2", stats: STANDARD_STATS },

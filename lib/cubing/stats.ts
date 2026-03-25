@@ -134,7 +134,7 @@ export function recomputeStats(
 ): EventStats {
   const has = (s: StatType) => enabledStats.includes(s);
 
-  const bestSingle = computeBestSingle(solves);
+  const bestSingle = has("single") ? computeBestSingle(solves) : null;
 
   const currentAo5 = has("ao5") ? computeAo5(solves) : null;
   const currentAo12 = has("ao12") ? computeAo12(solves) : null;
