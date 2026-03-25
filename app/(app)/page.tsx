@@ -37,13 +37,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Timer states:
-// idle       — waiting for spacebar press
+// idle       — waiting for spacebar press, shows last time or 0.00
 // inspecting — inspection countdown (if enabled)
 // holding    — spacebar held, waiting for hold delay to pass
 // ready      — hold delay met, release to start
 // running    — timer is running
-// stopped    — timer stopped, showing result
-type TimerState = "idle" | "inspecting" | "holding" | "ready" | "running" | "stopped";
+type TimerState = "idle" | "inspecting" | "holding" | "ready" | "running";
 
 function formatTime(ms: number): string {
   if (ms === Infinity) return "DNF";
@@ -159,7 +158,7 @@ export default function TimerPage() {
       setElapsed(finalTime);
       startTimeRef.current = null;
     }
-    setState("stopped");
+    setState("idle");
 
     const event = selectedEventRef.current;
     setScramble(generateScramble(event));
@@ -225,8 +224,7 @@ export default function TimerPage() {
 
       if (s === "running") {
         stopTimer();
-      } else if (s === "idle" || s === "stopped") {
-        // From idle or stopped, start the next solve sequence.
+      } else if (s === "idle") {
         if (settingsRef.current.useInspection) {
           startInspection();
         } else {
