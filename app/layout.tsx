@@ -34,6 +34,9 @@ export default function RootLayout({
       lang="en"
       className={`${nunito.variable} ${geistMono.variable} h-full antialiased dark`}
     >
+      <head>
+        <link rel="stylesheet" href="/cubing-icons.css" />
+      </head>
       <body className="h-full flex flex-col">
         <TRPCReactProvider>
           <TooltipProvider>{children}</TooltipProvider>
