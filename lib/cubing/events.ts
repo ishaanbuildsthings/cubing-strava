@@ -20,7 +20,7 @@ export enum CubeEvent {
 
 export type StatType = "single" | "ao5" | "ao12" | "ao100" | "mo3";
 
-export interface EventMeta {
+export interface EventConfig {
   id: CubeEvent;
   name: string;
   stats: StatType[];
@@ -29,7 +29,7 @@ export interface EventMeta {
 const STANDARD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12", "ao100"];
 const BLD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12"];
 
-export const EVENTS_LIST: EventMeta[] = [
+export const EVENTS_LIST: EventConfig[] = [
   { id: CubeEvent.TWO, name: "2x2", stats: STANDARD_STATS },
   { id: CubeEvent.THREE, name: "3x3", stats: STANDARD_STATS },
   { id: CubeEvent.FOUR, name: "4x4", stats: STANDARD_STATS },
@@ -47,10 +47,10 @@ export const EVENTS_LIST: EventMeta[] = [
   { id: CubeEvent.CLOCK, name: "Clock", stats: STANDARD_STATS },
 ];
 
-export const EVENT_MAP: Record<CubeEvent, EventMeta> = Object.fromEntries(
+export const EVENT_MAP: Record<CubeEvent, EventConfig> = Object.fromEntries(
   EVENTS_LIST.map((e) => [e.id, e])
-) as Record<CubeEvent, EventMeta>;
+) as Record<CubeEvent, EventConfig>;
 
-export function getEventMeta(event: CubeEvent): EventMeta {
+export function getEventConfig(event: CubeEvent): EventConfig {
   return EVENT_MAP[event];
 }

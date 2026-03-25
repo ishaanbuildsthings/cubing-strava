@@ -10,7 +10,7 @@ import {
   getStats,
   type Solve,
 } from "./db";
-import { CubeEvent, EVENTS_LIST, EVENT_MAP } from "@/lib/cubing/events";
+import { CubeEvent, EVENTS_LIST, EVENT_MAP, type EventConfig } from "@/lib/cubing/events";
 import { effectiveTime, type EventStats } from "@/lib/cubing/stats";
 
 type TimerState = "idle" | "ready" | "running" | "stopped";
@@ -150,7 +150,7 @@ export default function TimerPage() {
       ? "Press spacebar to stop"
       : "Release spacebar to start";
 
-  const eventMeta = EVENT_MAP[selectedEvent];
+  const eventConfig = EVENT_MAP[selectedEvent];
 
   return (
     <div className="flex flex-1 overflow-hidden select-none">
@@ -187,19 +187,19 @@ export default function TimerPage() {
         {/* Stats display */}
         {stats && (
           <div className="flex gap-4 text-xs text-muted-foreground">
-            {eventMeta.stats.includes("single") && (
+            {eventConfig.stats.includes("single") && (
               <span>best: {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}</span>
             )}
-            {eventMeta.stats.includes("ao5") && (
+            {eventConfig.stats.includes("ao5") && (
               <span>ao5: {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}</span>
             )}
-            {eventMeta.stats.includes("ao12") && (
+            {eventConfig.stats.includes("ao12") && (
               <span>ao12: {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}</span>
             )}
-            {eventMeta.stats.includes("ao100") && (
+            {eventConfig.stats.includes("ao100") && (
               <span>ao100: {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}</span>
             )}
-            {eventMeta.stats.includes("mo3") && (
+            {eventConfig.stats.includes("mo3") && (
               <span>mo3: {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}</span>
             )}
           </div>
