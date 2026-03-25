@@ -28,6 +28,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useSettings } from "@/lib/context/settings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +60,7 @@ function formatSolveTime(solve: Solve): string {
 }
 
 export default function TimerPage() {
+  const { timerSettings, updateTimerSettings } = useSettings();
   const [selectedEvent, setSelectedEvent] = useState<CubeEvent>(CubeEvent.THREE);
   const [state, setState] = useState<TimerState>("idle");
   const [elapsed, setElapsed] = useState(0);
@@ -229,8 +231,60 @@ export default function TimerPage() {
                 Configure your practice session.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4 text-sm text-muted-foreground">
-              No settings available yet.
+            <div className="space-y-4 py-2">
+              {/* Hold delay */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Hold delay</p>
+                  <p className="text-xs text-muted-foreground">How long to hold spacebar before ready</p>
+                </div>
+                <select
+                  className="bg-muted rounded-md px-2 py-1 text-sm"
+                  value={timerSettings.holdDelay}
+                  onChange={(e) => updateTimerSettings({ holdDelay: Number(e.target.value) })}
+                >
+                  <option value={0}>None</option>
+                  <option value={300}>0.3s</option>
+                  <option value={500}>0.5s</option>
+                  <option value={1000}>1s</option>
+                </select>
+              </div>
+
+              {/* Show timer while running */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Show timer</p>
+                  <p className="text-xs text-muted-foreground">Display running time while solving</p>
+                </div>
+                <button
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    timerSettings.showTimerWhileRunning ? "bg-primary" : "bg-muted"
+                  }`}
+                  onClick={() => updateTimerSettings({ showTimerWhileRunning: !timerSettings.showTimerWhileRunning })}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${
+                    timerSettings.showTimerWhileRunning ? "translate-x-4" : ""
+                  }`} />
+                </button>
+              </div>
+
+              {/* Use inspection */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Inspection</p>
+                  <p className="text-xs text-muted-foreground">WCA-style 15s countdown before timing</p>
+                </div>
+                <button
+                  className={`w-10 h-6 rounded-full transition-colors ${
+                    timerSettings.useInspection ? "bg-primary" : "bg-muted"
+                  }`}
+                  onClick={() => updateTimerSettings({ useInspection: !timerSettings.useInspection })}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${
+                    timerSettings.useInspection ? "translate-x-4" : ""
+                  }`} />
+                </button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

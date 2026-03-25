@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { caller } from "@/lib/trpc/server";
 import { ViewerProvider } from "@/lib/context/viewer";
+import { SettingsProvider } from "@/lib/context/settings";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/lib/components/app-sidebar";
 
@@ -20,14 +21,18 @@ export default async function AppLayout({
     redirect("/create-profile");
   }
 
+  const { timerSettings } = await trpc.settings.get();
+
   return (
     <ViewerProvider user={session.user}>
-      <SidebarProvider>
-        <AppSidebar />
-        <main className="flex flex-col flex-1 min-h-0">
-          {children}
-        </main>
-      </SidebarProvider>
+      <SettingsProvider initialTimerSettings={timerSettings}>
+        <SidebarProvider>
+          <AppSidebar />
+          <main className="flex flex-col flex-1 min-h-0">
+            {children}
+          </main>
+        </SidebarProvider>
+      </SettingsProvider>
     </ViewerProvider>
   );
 }
