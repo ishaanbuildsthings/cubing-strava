@@ -6,6 +6,7 @@ import { generateScramble } from "@/lib/cubing/scramble";
 import {
   addSolve,
   clearSolves,
+  countSolvesForEvent,
   deleteSolve,
   getRecentSolves,
   getStats,
@@ -75,6 +76,7 @@ export default function TimerPage() {
   const [inspectionTime, setInspectionTime] = useState(0);
   const [scramble, setScramble] = useState<string | null>(null);
   const [solves, setSolves] = useState<Solve[]>([]);
+  const [totalSolveCount, setTotalSolveCount] = useState(0);
   const [stats, setStats] = useState<EventStats | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -114,6 +116,7 @@ export default function TimerPage() {
       setSolves(loaded);
       setHasMore(loaded.length === INITIAL_SOLVES_LOADED);
     });
+    countSolvesForEvent(selectedEvent).then(setTotalSolveCount);
     getStats(selectedEvent).then(setStats);
   }, [selectedEvent]);
 
@@ -189,6 +192,7 @@ export default function TimerPage() {
     const usedScramble = scrambleRef.current ?? "";
     addSolve(event, finalTime, usedScramble).then(({ solve, stats: newStats }) => {
       setSolves((prev) => [solve, ...prev]);
+      setTotalSolveCount((c) => c + 1);
       setStats(newStats);
     });
   }, [elapsed]);
@@ -227,6 +231,7 @@ export default function TimerPage() {
   const handleDelete = async (id: number) => {
     const { stats: newStats } = await deleteSolve(id);
     setSolves((prev) => prev.filter((s) => s.id !== id));
+    setTotalSolveCount((c) => c - 1);
     setStats(newStats);
   };
 
@@ -540,7 +545,7 @@ export default function TimerPage() {
                   <Popover>
                     <PopoverTrigger render={<li />} nativeButton={false} className="flex items-center justify-between px-3 py-2 text-sm border-b border-border/40 cursor-pointer hover:bg-muted transition-colors w-full h-full">
                         <span className="text-muted-foreground tabular-nums text-xs w-6 shrink-0">
-                          {solves.length - i}
+                          {totalSolveCount - i}
                         </span>
                         <span className="font-mono tabular-nums font-semibold">
                           {formatSolveTime(solve)}
@@ -614,6 +619,7 @@ export default function TimerPage() {
                 onClick={() => {
                   clearSolves(selectedEvent).then((newStats) => {
                     setSolves([]);
+                    setTotalSolveCount(0);
                     setStats(newStats);
                     setConfirmClear(false);
                   });
