@@ -79,8 +79,13 @@ export default function TimerPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Whether there are more solves in IDB beyond what's currently loaded.
+  // False once a batch returns fewer results than requested.
   const [hasMore, setHasMore] = useState(true);
+  // True while fetching the next batch of solves (prevents duplicate requests).
   const [loadingMore, setLoadingMore] = useState(false);
+  // Ref to the scrollable <ul> container — needed by the virtualizer to
+  // measure scroll position and determine which rows are visible.
   const scrollParentRef = useRef<HTMLUListElement>(null);
   const startTimeRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -104,10 +109,10 @@ export default function TimerPage() {
     setConfirmClear(false);
     setScramble(generateScramble(selectedEvent));
     setHasMore(true);
-    const INITIAL_BATCH = 100;
-    getRecentSolves(selectedEvent, INITIAL_BATCH).then((loaded) => {
+    const INITIAL_SOLVES_LOADED = 100;
+    getRecentSolves(selectedEvent, INITIAL_SOLVES_LOADED).then((loaded) => {
       setSolves(loaded);
-      setHasMore(loaded.length >= INITIAL_BATCH);
+      setHasMore(loaded.length >= INITIAL_SOLVES_LOADED);
     });
     getStats(selectedEvent).then(setStats);
   }, [selectedEvent]);
