@@ -37,7 +37,7 @@ function formatSolveTime(solve: Solve): string {
 }
 
 export default function TimerPage() {
-  const [selectedEvent, setSelectedEvent] = useState<CubeEvent>(CubeEvent["3x3"]);
+  const [selectedEvent, setSelectedEvent] = useState<CubeEvent>(CubeEvent.THREE);
   const [state, setState] = useState<TimerState>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [scramble, setScramble] = useState<string | null>(null);
