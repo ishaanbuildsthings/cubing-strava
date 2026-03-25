@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Timer, Rss, User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,8 +24,10 @@ import { useViewer } from "@/lib/hooks/useViewer";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const navItems = [
-  { label: "Timer", href: "/", icon: Timer },
-  { label: "Feed", href: "/feed", icon: Rss },
+  { label: "Practice", href: "/", icon: "⏱️" },
+  { label: "Home", href: "/home", icon: "🏠" },
+  { label: "Race", href: "/race", icon: "🏁" },
+  { label: "Tourney", href: "/tourney", icon: "🏆" },
 ];
 
 export function AppSidebar() {
@@ -51,7 +53,7 @@ export function AppSidebar() {
                     render={<Link href={item.href} />}
                     isActive={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
                   >
-                    <item.icon />
+                    <span className="text-lg leading-none">{item.icon}</span>
                     <span>{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
