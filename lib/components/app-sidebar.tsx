@@ -16,7 +16,7 @@ import {
 import { useViewer } from "@/lib/hooks/useViewer";
 
 const navItems = [
-  { label: "Timer", href: "/timer", icon: Timer },
+  { label: "Timer", href: "/", icon: Timer },
   { label: "Feed", href: "/feed", icon: Rss },
 ];
 
@@ -34,7 +34,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
-                    isActive={pathname.startsWith(item.href)}
+                    isActive={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
                   >
                     <item.icon />
                     <span>{item.label}</span>
