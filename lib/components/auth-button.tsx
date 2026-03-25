@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { useViewer } from "@/lib/components/viewer-provider";
+import { useViewer } from "@/lib/hooks/useViewer";
 
 export function AuthButton() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { caller } from "@/lib/trpc/server";
-import { ViewerProvider } from "@/lib/components/viewer-provider";
+import { ViewerProvider } from "@/lib/context/viewer";
 import { AuthButton } from "@/lib/components/auth-button";
 
 export default async function AppLayout({
