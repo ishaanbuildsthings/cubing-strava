@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useViewer } from "@/lib/hooks/useViewer";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2 } from "lucide-react";
+import { Pencil, Check, X, Loader2, Camera } from "lucide-react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 type EditingField = "firstName" | "lastName" | "username" | null;
 
@@ -18,6 +19,11 @@ export default function SettingsPage() {
   // Debounced username for availability check.
   const [debouncedUsername, setDebouncedUsername] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Profile picture upload state.
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [pictureError, setPictureError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
   // Debounce username input — only check after 400ms of no typing.
   useEffect(() => {
@@ -89,6 +95,48 @@ export default function SettingsPage() {
     if (e.key === "Escape") cancelEditing();
   };
 
+  const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setPictureError("Please upload a JPEG, PNG, WebP, or GIF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPictureError("Photo must be under 5MB.");
+      return;
+    }
+
+    setPictureError(null);
+    setUploadingPicture(true);
+
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const path = `${user.id}/profile`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      // Append timestamp to bust cache on the CDN/browser.
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const profilePictureUrl = `${data.publicUrl}?t=${Date.now()}`;
+
+      const updatedUser = await updateMutation.mutateAsync({ profilePictureUrl });
+      setViewer(updatedUser);
+    } catch (err) {
+      setPictureError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
   // Username validation state for the UI.
   const getUsernameStatus = () => {
     if (editingField !== "username") return null;
@@ -118,6 +166,41 @@ export default function SettingsPage() {
         <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
           Profile
         </h2>
+
+        {/* Profile picture */}
+        <div className="flex items-center gap-4 pb-4 border-b border-border">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPicture}
+            className="relative w-16 h-16 rounded-full bg-muted overflow-hidden flex items-center justify-center group shrink-0"
+          >
+            {viewer.profilePictureUrl ? (
+              <img src={viewer.profilePictureUrl} alt={viewer.username} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xl font-bold">{viewer.firstName[0].toUpperCase()}</span>
+            )}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {uploadingPicture ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Camera className="w-5 h-5 text-white" />
+              )}
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePictureUpload}
+          />
+          <div>
+            <p className="text-sm font-medium">Profile photo</p>
+            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, or GIF. Max 5MB.</p>
+            {pictureError && <p className="text-xs text-red-500 mt-1">{pictureError}</p>}
+          </div>
+        </div>
 
         {fields.map((field) => (
           <div

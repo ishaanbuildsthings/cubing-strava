@@ -72,8 +72,12 @@ export default function ProfilePage() {
       <div className="px-8 pt-8 pb-4">
         <div className="flex items-start justify-between max-w-3xl mx-auto">
           <div className="flex items-center gap-5">
-            <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center text-4xl font-bold">
-              {user.firstName[0].toUpperCase()}
+            <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center text-4xl font-bold overflow-hidden">
+              {user.profilePictureUrl ? (
+                <img src={user.profilePictureUrl} alt={user.username} className="w-full h-full object-cover" />
+              ) : (
+                user.firstName[0].toUpperCase()
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
