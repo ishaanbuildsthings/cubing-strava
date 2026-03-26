@@ -113,7 +113,7 @@ export default function SettingsPage() {
             </div>
             {editingField !== field.key && (
               <button
-                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
                 onClick={() => startEditing(field.key)}
               >
                 <Pencil className="w-3.5 h-3.5" />
