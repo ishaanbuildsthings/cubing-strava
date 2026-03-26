@@ -297,7 +297,7 @@ export default function SettingsPage() {
             <p className="text-xs text-muted-foreground mb-0.5">Country</p>
           </div>
           <select
-            className="bg-muted rounded-md px-2 py-1 text-sm border border-border"
+            className="bg-muted rounded-md px-2 py-1 text-sm border border-border focus:outline-none"
             value={viewer.country ?? ""}
             onChange={async (e) => {
               const country = e.target.value || null;
