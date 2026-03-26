@@ -12,10 +12,10 @@ type ProfileTab = "overview" | "collection" | "clubs";
 
 // Mock data for placeholder UI
 const MOCK_RATINGS = [
-  { event: "3x3", icon: "event-333", rating: 1420, color: "text-green-400" },
-  { event: "2x2", icon: "event-222", rating: 1180, color: "text-blue-400" },
-  { event: "4x4", icon: "event-444", rating: 980, color: "text-yellow-400" },
-  { event: "OH", icon: "event-333oh", rating: 1050, color: "text-purple-400" },
+  { event: "3x3", icon: "event-333", rating: 1420 },
+  { event: "2x2", icon: "event-222", rating: 1180 },
+  { event: "4x4", icon: "event-444", rating: 980 },
+  { event: "OH", icon: "event-333oh", rating: 1050 },
 ];
 
 const MOCK_PBS = [
@@ -153,7 +153,7 @@ export default function ProfilePage() {
                       <span className={`cubing-icon ${r.icon} text-lg`} />
                       <span className="text-xs font-semibold text-muted-foreground">{r.event}</span>
                     </div>
-                    <p className={`text-2xl font-extrabold ${r.color}`}>{r.rating}</p>
+                    <p className="text-2xl font-extrabold text-foreground">{r.rating}</p>
                   </div>
                 ))}
               </div>
@@ -179,10 +179,10 @@ export default function ProfilePage() {
                       <span className={`cubing-icon ${pb.icon} text-base`} />
                       <span className="text-sm font-semibold">{pb.event}</span>
                     </div>
-                    <span className="text-sm font-mono tabular-nums text-right font-bold">
+                    <span className="text-base font-mono tabular-nums text-right font-extrabold text-foreground">
                       {pb.single}
                     </span>
-                    <span className="text-sm font-mono tabular-nums text-right text-muted-foreground">
+                    <span className="text-base font-mono tabular-nums text-right font-extrabold text-foreground">
                       {pb.ao5}
                     </span>
                   </div>
