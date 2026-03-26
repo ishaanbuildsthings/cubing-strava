@@ -24,7 +24,6 @@ export default function ProfilePage() {
     firstName: "",
     lastName: "",
     username: "",
-    wcaId: "",
   });
 
   const updateMutation = useMutation({
@@ -63,7 +62,6 @@ export default function ProfilePage() {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      wcaId: privateUser?.wcaId ?? "",
     });
     setEditing(true);
   };
@@ -73,7 +71,6 @@ export default function ProfilePage() {
       firstName: editForm.firstName,
       lastName: editForm.lastName,
       username: editForm.username,
-      wcaId: editForm.wcaId || null,
     });
   };
 
@@ -162,14 +159,7 @@ export default function ProfilePage() {
             <p className="text-sm font-semibold">WCA ID</p>
             <p className="text-xs text-muted-foreground">World Cube Association profile</p>
           </div>
-          {editing ? (
-            <input
-              className="bg-muted rounded-md px-2 py-1 text-sm w-32 text-right"
-              value={editForm.wcaId}
-              onChange={(e) => setEditForm((f) => ({ ...f, wcaId: e.target.value }))}
-              placeholder="e.g. 2015XXXX01"
-            />
-          ) : privateUser?.wcaId ? (
+          {privateUser?.wcaId ? (
             <a
               href={`https://www.worldcubeassociation.org/persons/${privateUser.wcaId}`}
               target="_blank"
