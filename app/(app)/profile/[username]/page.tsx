@@ -160,11 +160,13 @@ export default function ProfilePage() {
                       key={r.event}
                       className="bg-card rounded-xl p-4 border border-border hover:border-primary/30 transition-colors"
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        <EventIcon event={config} size={32} />
-                        <span className="text-xs font-semibold text-muted-foreground">{config.name}</span>
+                      <div className="flex items-center gap-3">
+                        <EventIcon event={config} size={36} />
+                        <div>
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">{config.name}</span>
+                          <p className="text-3xl font-black text-foreground leading-none" style={{ fontFamily: "'Impact', 'Arial Black', sans-serif", letterSpacing: "-0.02em" }}>{r.rating}</p>
+                        </div>
                       </div>
-                      <p className="text-3xl font-black text-foreground">{r.rating}</p>
                     </div>
                   );
                 })}
