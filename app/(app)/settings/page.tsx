@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useViewer } from "@/lib/hooks/useViewer";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2 } from "lucide-react";
+import { Pencil, Check, X, Loader2, Camera } from "lucide-react";
+import { UserAvatar } from "@/lib/components/user-avatar";
+import { validateAvatarFile, uploadAvatar, ACCEPTED_IMAGE_TYPES } from "@/lib/supabase/upload-avatar";
 
 type EditingField = "firstName" | "lastName" | "username" | null;
 
@@ -18,6 +20,10 @@ export default function SettingsPage() {
   // Debounced username for availability check.
   const [debouncedUsername, setDebouncedUsername] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Profile picture upload state.
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [pictureError, setPictureError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Debounce username input — only check after 400ms of no typing.
   useEffect(() => {
@@ -89,6 +95,31 @@ export default function SettingsPage() {
     if (e.key === "Escape") cancelEditing();
   };
 
+  const handlePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const validationError = validateAvatarFile(file);
+    if (validationError) {
+      setPictureError(validationError);
+      return;
+    }
+
+    setPictureError(null);
+    setUploadingPicture(true);
+
+    try {
+      const profilePictureUrl = await uploadAvatar(file);
+      const updatedUser = await updateMutation.mutateAsync({ profilePictureUrl });
+      setViewer(updatedUser);
+    } catch (err) {
+      setPictureError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
   // Username validation state for the UI.
   const getUsernameStatus = () => {
     if (editingField !== "username") return null;
@@ -118,6 +149,37 @@ export default function SettingsPage() {
         <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
           Profile
         </h2>
+
+        {/* Profile picture */}
+        <div className="flex items-center gap-4 pb-4 border-b border-border">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPicture}
+            className="relative group shrink-0"
+          >
+            <UserAvatar user={viewer} size="md" rounded="xl" />
+            <div className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {uploadingPicture ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Camera className="w-5 h-5 text-white" />
+              )}
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES}
+            className="hidden"
+            onChange={handlePictureUpload}
+          />
+          <div>
+            <p className="text-sm font-medium">Profile photo</p>
+            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, or GIF. Max 5MB.</p>
+            {pictureError && <p className="text-xs text-red-500 mt-1">{pictureError}</p>}
+          </div>
+        </div>
 
         {fields.map((field) => (
           <div

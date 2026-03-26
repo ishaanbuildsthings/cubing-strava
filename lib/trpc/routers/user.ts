@@ -4,6 +4,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client-runtime-utils";
 import { createTRPCRouter, authedProcedure } from "../init";
 import { userService } from "@/lib/services/user";
 import { userToIUser } from "@/lib/transforms/user";
+import { publicEnv } from "@/lib/env";
 
 export const userRouter = createTRPCRouter({
   // Fetch a user by username. Always returns the same public shape.
@@ -35,6 +36,10 @@ export const userRouter = createTRPCRouter({
       username: z.string().min(3).max(30).optional(),
       firstName: z.string().min(1).max(50).optional(),
       lastName: z.string().min(1).max(50).optional(),
+      profilePictureUrl: z.string().refine(
+        (url) => url.startsWith(`${publicEnv().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/`),
+        { message: "Invalid profile picture URL" }
+      ).nullable().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       try {
