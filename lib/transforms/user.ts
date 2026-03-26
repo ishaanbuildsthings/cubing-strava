@@ -6,6 +6,8 @@ export interface IUser {
   firstName: string;
   lastName: string;
   wcaId: string | null;
+  profilePictureUrl: string | null;
+  country: string | null;
 }
 
 export function userToIUser(user: User): IUser {
@@ -15,5 +17,7 @@ export function userToIUser(user: User): IUser {
     firstName: user.firstName,
     lastName: user.lastName,
     wcaId: user.wcaId,
+    profilePictureUrl: user.profilePictureUrl,
+    country: user.country,
   };
 }

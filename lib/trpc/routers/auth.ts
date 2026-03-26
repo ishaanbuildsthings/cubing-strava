@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, baseProcedure, authedProcedure } from "../init";
 import { userToIUser } from "@/lib/transforms/user";
+import { publicEnv } from "@/lib/env";
 
 export const authRouter = createTRPCRouter({
   // Creates a profile for a user who has signed in with Supabase but
@@ -13,6 +14,11 @@ export const authRouter = createTRPCRouter({
         username: z.string().min(3).max(30),
         firstName: z.string().min(1).max(50),
         lastName: z.string().min(1).max(50),
+        country: z.string().length(2).optional(),
+        profilePictureUrl: z.string().refine(
+          (url) => url.startsWith(`${publicEnv().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/`),
+          { message: "Invalid profile picture URL" }
+        ).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -40,6 +46,8 @@ export const authRouter = createTRPCRouter({
           username: input.username,
           firstName: input.firstName,
           lastName: input.lastName,
+          profilePictureUrl: input.profilePictureUrl,
+          country: input.country,
         },
       });
 
