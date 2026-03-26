@@ -20,13 +20,21 @@ const sizeClasses = {
   lg: "w-24 h-24 text-4xl",
 };
 
+// Scale border radius with avatar size so small avatars
+// still look square-ish instead of nearly circular.
+const roundedXlBySize = {
+  sm: "rounded-md",
+  md: "rounded-xl",
+  lg: "rounded-xl",
+};
+
 export function UserAvatar({
   user,
   size = "md",
   rounded = "xl",
   className = "",
 }: UserAvatarProps) {
-  const roundedClass = rounded === "full" ? "rounded-full" : "rounded-xl";
+  const roundedClass = rounded === "full" ? "rounded-full" : roundedXlBySize[size];
 
   return (
     <div
