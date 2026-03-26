@@ -6,7 +6,7 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Pencil, Check, X, Loader2, Camera } from "lucide-react";
 import { UserAvatar } from "@/lib/components/user-avatar";
-import { validateAvatarFile, uploadAvatar, ACCEPTED_IMAGE_TYPES } from "@/lib/supabase/upload-avatar";
+import { validateAvatarFile, uploadAvatar, deleteAvatar, ACCEPTED_IMAGE_TYPES } from "@/lib/supabase/upload-avatar";
 
 type EditingField = "firstName" | "lastName" | "username" | null;
 
@@ -120,6 +120,20 @@ export default function SettingsPage() {
     }
   };
 
+  const handlePictureDelete = async () => {
+    setPictureError(null);
+    setUploadingPicture(true);
+    try {
+      await deleteAvatar();
+      const updatedUser = await updateMutation.mutateAsync({ profilePictureUrl: null });
+      setViewer(updatedUser);
+    } catch (err) {
+      setPictureError(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
   // Username validation state for the UI.
   const getUsernameStatus = () => {
     if (editingField !== "username") return null;
@@ -177,6 +191,15 @@ export default function SettingsPage() {
           <div>
             <p className="text-sm font-medium">Profile photo</p>
             <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, or GIF. Max 5MB.</p>
+            {viewer.profilePictureUrl && (
+              <button
+                className="text-xs text-red-500 hover:text-red-400 transition-colors mt-1"
+                onClick={handlePictureDelete}
+                disabled={uploadingPicture}
+              >
+                Remove photo
+              </button>
+            )}
             {pictureError && <p className="text-xs text-red-500 mt-1">{pictureError}</p>}
           </div>
         </div>
