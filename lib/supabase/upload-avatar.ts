@@ -36,3 +36,14 @@ export async function uploadAvatar(file: File): Promise<string> {
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
   return `${data.publicUrl}?t=${Date.now()}`;
 }
+
+// Deletes the avatar file from Supabase storage.
+export async function deleteAvatar(): Promise<void> {
+  const supabase = createBrowserSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const path = `${user.id}/profile`;
+  const { error } = await supabase.storage.from("avatars").remove([path]);
+  if (error) throw new Error(error.message);
+}
