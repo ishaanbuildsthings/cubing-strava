@@ -38,7 +38,7 @@ export default function ProfilePage() {
     },
   });
 
-  if (profileQuery.isLoading) {
+  if (profileQuery.status === "pending") {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
@@ -46,7 +46,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (profileQuery.error) {
+  if (profileQuery.status === "error") {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-red-500">User not found</p>
@@ -54,7 +54,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { user, isOwnProfile } = profileQuery.data!;
+  const { user, isOwnProfile } = profileQuery.data;
   const privateUser = isOwnProfile ? (user as IPrivateUser) : null;
 
   const startEditing = () => {
