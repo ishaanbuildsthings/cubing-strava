@@ -40,7 +40,6 @@ export const userRouter = createTRPCRouter({
       username: z.string().min(3).max(30).optional(),
       firstName: z.string().min(1).max(50).optional(),
       lastName: z.string().min(1).max(50).optional(),
-      wcaId: z.string().max(20).nullable().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const user = await userService(ctx).update(ctx.viewer.userId, input);
