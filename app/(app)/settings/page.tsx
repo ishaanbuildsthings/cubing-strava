@@ -5,8 +5,8 @@ import { useViewer } from "@/lib/hooks/useViewer";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Pencil, Check, X, Loader2, Camera } from "lucide-react";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { UserAvatar } from "@/lib/components/user-avatar";
+import { validateAvatarFile, uploadAvatar } from "@/lib/supabase/upload-avatar";
 
 type EditingField = "firstName" | "lastName" | "username" | null;
 
@@ -24,7 +24,6 @@ export default function SettingsPage() {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [pictureError, setPictureError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
   // Debounce username input — only check after 400ms of no typing.
   useEffect(() => {
@@ -101,12 +100,9 @@ export default function SettingsPage() {
     if (!file) return;
     e.target.value = "";
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setPictureError("Please upload a JPEG, PNG, WebP, or GIF.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setPictureError("Photo must be under 5MB.");
+    const validationError = validateAvatarFile(file);
+    if (validationError) {
+      setPictureError(validationError);
       return;
     }
 
@@ -114,21 +110,7 @@ export default function SettingsPage() {
     setUploadingPicture(true);
 
     try {
-      const supabase = createBrowserSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const path = `${user.id}/profile`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { upsert: true });
-
-      if (uploadError) throw new Error(uploadError.message);
-
-      // Append timestamp to bust cache on the CDN/browser.
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      const profilePictureUrl = `${data.publicUrl}?t=${Date.now()}`;
-
+      const profilePictureUrl = await uploadAvatar(file);
       const updatedUser = await updateMutation.mutateAsync({ profilePictureUrl });
       setViewer(updatedUser);
     } catch (err) {

@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { COUNTRIES, countryCodeToFlag } from "@/lib/countries";
+import { validateAvatarFile, uploadAvatar } from "@/lib/supabase/upload-avatar";
 
 export default function CreateProfilePage() {
   const router = useRouter();
@@ -23,19 +23,15 @@ export default function CreateProfilePage() {
     trpc.auth.createProfile.mutationOptions()
   );
 
-  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
-    if (file && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      e.target.value = "";
-      setProfilePictureError("Please upload a JPEG, PNG, WebP, or GIF.");
-      return;
-    }
-    if (file && file.size > 5 * 1024 * 1024) {
-      e.target.value = "";
-      setProfilePictureError("Photo must be under 5MB.");
-      return;
+    if (file) {
+      const validationError = validateAvatarFile(file);
+      if (validationError) {
+        e.target.value = "";
+        setProfilePictureError(validationError);
+        return;
+      }
     }
     setProfilePictureError(null);
     setProfilePictureFile(file);
@@ -48,20 +44,7 @@ export default function CreateProfilePage() {
     let profilePictureUrl: string | undefined;
 
     if (profilePictureFile) {
-      const supabase = createBrowserSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const path = `${user.id}/profile`;
-
-      const { error } = await supabase.storage
-        .from("avatars")
-        .upload(path, profilePictureFile, { upsert: true });
-
-      if (error) throw new Error(error.message);
-
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      profilePictureUrl = data.publicUrl;
+      profilePictureUrl = await uploadAvatar(profilePictureFile);
     }
 
     await createProfile.mutateAsync({ username, firstName, lastName, profilePictureUrl, country: country || undefined });
