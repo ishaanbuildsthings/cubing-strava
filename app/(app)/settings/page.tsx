@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useViewer } from "@/lib/hooks/useViewer";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Pencil, Check, X, Loader2, Camera } from "lucide-react";
+import { Pencil, Check, X, Loader2, Camera, ChevronDown } from "lucide-react";
+import { COUNTRIES, countryCodeToFlag } from "@/lib/countries";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { validateAvatarFile, uploadAvatar, deleteAvatar, ACCEPTED_IMAGE_TYPES } from "@/lib/supabase/upload-avatar";
 
@@ -283,6 +284,34 @@ export default function SettingsPage() {
             )}
           </div>
         ))}
+
+        {/* Country / flag */}
+        <div className="flex items-center justify-between py-3 border-b border-border">
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground mb-0.5">Country</p>
+            <p className="text-sm font-medium">
+              {viewer.country
+                ? `${countryCodeToFlag(viewer.country)} ${COUNTRIES.find((c) => c.code === viewer.country)?.name ?? viewer.country}`
+                : "Not set"}
+            </p>
+          </div>
+          <select
+            className="bg-muted rounded-md px-2 py-1 text-sm border border-border"
+            value={viewer.country ?? ""}
+            onChange={async (e) => {
+              const country = e.target.value || null;
+              const updatedUser = await updateMutation.mutateAsync({ country });
+              setViewer(updatedUser);
+            }}
+          >
+            <option value="">None</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {countryCodeToFlag(c.code)} {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {error && (
           <p className="text-sm text-red-500 pt-2">{error}</p>
