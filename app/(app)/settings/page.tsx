@@ -323,24 +323,36 @@ export default function SettingsPage() {
 
       {/* Display section */}
       <section>
-        <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">
+        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
           Display
         </h2>
-        <div className="flex items-center justify-between py-3 border-b border-border">
-          <div>
-            <p className="text-sm font-medium">Icon style</p>
-            <p className="text-xs text-muted-foreground">Use 3D cube icons or flat icons</p>
+        <div className="py-3 border-b border-border">
+          <p className="text-sm font-medium mb-1">Icon style</p>
+          <p className="text-xs text-muted-foreground mb-3">Choose how event icons appear across the app</p>
+          <div className="flex gap-2">
+            <button
+              className={`flex flex-col items-center gap-2 px-5 py-3 rounded-lg border-2 transition-colors ${
+                !displaySettings.use3dIcons
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-muted-foreground/40"
+              }`}
+              onClick={() => updateDisplaySettings({ use3dIcons: false })}
+            >
+              <span className="cubing-icon event-333 text-3xl" />
+              <span className="text-xs font-semibold">Flat</span>
+            </button>
+            <button
+              className={`flex flex-col items-center gap-2 px-5 py-3 rounded-lg border-2 transition-colors ${
+                displaySettings.use3dIcons
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-muted-foreground/40"
+              }`}
+              onClick={() => updateDisplaySettings({ use3dIcons: true })}
+            >
+              <img src="/rubiks_3x3.svg" alt="3D" width={32} height={32} />
+              <span className="text-xs font-semibold">3D</span>
+            </button>
           </div>
-          <button
-            className={`w-10 h-6 rounded-full transition-colors ${
-              displaySettings.use3dIcons ? "bg-primary" : "bg-muted"
-            }`}
-            onClick={() => updateDisplaySettings({ use3dIcons: !displaySettings.use3dIcons })}
-          >
-            <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${
-              displaySettings.use3dIcons ? "translate-x-4" : ""
-            }`} />
-          </button>
         </div>
       </section>
     </div>
