@@ -447,8 +447,8 @@ export default function TimerPage() {
         {/* Stats table — current & best */}
         {stats && (
           <div className="border-b border-border">
-            <p className="px-3 pt-3 pb-1 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-              <span className="text-base leading-none" suppressHydrationWarning>📈</span> Stats
+            <p className="px-3 pt-3 pb-1 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5" suppressHydrationWarning>
+              <span className="text-base leading-none">📈</span> Stats
             </p>
             {/* Column headers */}
             <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 px-3 pb-1">
@@ -516,8 +516,8 @@ export default function TimerPage() {
             </div>
           </div>
         )}
-        <p className="px-3 py-2 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest border-y border-border flex items-center gap-1.5">
-          <span className="text-base leading-none" suppressHydrationWarning>⏱️</span> Solves
+        <p className="px-3 py-2 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest border-y border-border flex items-center gap-1.5" suppressHydrationWarning>
+          <span className="text-base leading-none">⏱️</span> Solves
         </p>
         <ul ref={scrollParentRef} className="flex-1 overflow-y-auto min-h-0">
           <div
