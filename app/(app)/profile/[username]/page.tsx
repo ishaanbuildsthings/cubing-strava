@@ -10,7 +10,7 @@ import type { IPrivateUser } from "@/lib/transforms/user";
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
-  const viewer = useViewer();
+  const { viewer, setViewer } = useViewer();
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -30,6 +30,9 @@ export default function ProfilePage() {
     ...trpc.user.updateProfile.mutationOptions(),
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries();
+      // Update the viewer context so the sidebar and other components
+      // reflect the new name/username immediately.
+      setViewer(updatedUser);
       // If username changed, navigate to the new URL.
       if (updatedUser.username !== username) {
         router.replace(`/profile/${updatedUser.username}`);

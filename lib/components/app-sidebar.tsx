@@ -33,7 +33,7 @@ const navItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const viewer = useViewer();
+  const { viewer } = useViewer();
   const supabase = createBrowserSupabaseClient();
 
   const handleSignOut = async () => {

@@ -1,21 +1,28 @@
 "use client";
 
-import { createContext } from "react";
+import { createContext, useState } from "react";
 import type { IUser } from "@/lib/transforms/user";
 
-// The current authenticated user, available to any component inside the
-// (app) route group. Set once by the server-side (app)/layout.tsx from
-// auth.whoAmI, so there's no duplicate client-side auth check needed.
-export const ViewerContext = createContext<IUser | null>(null);
+// Holds the current authenticated user and a setter to update it
+// (e.g., after a profile edit). Set initially by the server-side
+// (app)/layout.tsx from auth.whoAmI.
+export const ViewerContext = createContext<{
+  viewer: IUser;
+  setViewer: (user: IUser) => void;
+} | null>(null);
 
 export function ViewerProvider({
-  user,
+  user: initialUser,
   children,
 }: {
   user: IUser;
   children: React.ReactNode;
 }) {
+  const [viewer, setViewer] = useState<IUser>(initialUser);
+
   return (
-    <ViewerContext.Provider value={user}>{children}</ViewerContext.Provider>
+    <ViewerContext.Provider value={{ viewer, setViewer }}>
+      {children}
+    </ViewerContext.Provider>
   );
 }
