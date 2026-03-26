@@ -71,7 +71,7 @@ export default function SettingsPage() {
   const startEditing = (field: EditingField) => {
     if (!field) return;
     setEditingField(field);
-    setEditValue(viewer[field] ?? "");
+    setEditValue(viewer[field]);
     setError(null);
     setDebouncedUsername("");
   };
@@ -84,7 +84,7 @@ export default function SettingsPage() {
   };
 
   const saveField = () => {
-    if (!editingField || editValue === (viewer[editingField] ?? "")) {
+    if (!editingField || editValue === viewer[editingField]) {
       cancelEditing();
       return;
     }
