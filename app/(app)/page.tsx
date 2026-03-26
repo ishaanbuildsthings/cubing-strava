@@ -16,7 +16,8 @@ import {
   type Penalty,
 } from "./db";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { CubeEvent, EVENT_CONFIGS, EVENT_MAP, type EventConfig } from "@/lib/cubing/events";
+import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
+import { EventIcon } from "@/lib/components/event-icon";
 import { effectiveTime, type EventStats } from "@/lib/cubing/stats";
 import {
   Popover,
@@ -328,7 +329,7 @@ export default function TimerPage() {
       <div className="flex items-center px-4 py-2 border-b border-border">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted transition-colors">
-            <span className={`cubing-icon ${eventConfig.iconClass} text-lg`} />
+            <EventIcon event={eventConfig} size={20} />
             <span className="font-bold">{eventConfig.name}</span>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </DropdownMenuTrigger>
@@ -339,7 +340,7 @@ export default function TimerPage() {
                 onClick={() => setSelectedEvent(meta.id)}
                 className={selectedEvent === meta.id ? "bg-accent" : ""}
               >
-                <span className={`cubing-icon ${meta.iconClass} text-base`} />
+                <EventIcon event={meta} size={18} />
                 <span>{meta.name}</span>
               </DropdownMenuItem>
             ))}

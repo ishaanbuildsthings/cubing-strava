@@ -8,11 +8,13 @@ import { Pencil, Check, X, Loader2, Camera, ChevronDown } from "lucide-react";
 import { COUNTRIES, countryCodeToFlag } from "@/lib/countries";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { validateAvatarFile, uploadAvatar, deleteAvatar, ACCEPTED_IMAGE_TYPES } from "@/lib/supabase/upload-avatar";
+import { useSettings } from "@/lib/context/settings";
 
 type EditingField = "firstName" | "lastName" | "username" | null;
 
 export default function SettingsPage() {
   const { viewer, setViewer } = useViewer();
+  const { displaySettings, updateDisplaySettings } = useSettings();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -317,6 +319,29 @@ export default function SettingsPage() {
         {error && (
           <p className="text-sm text-red-500 pt-2">{error}</p>
         )}
+      </section>
+
+      {/* Display section */}
+      <section>
+        <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">
+          Display
+        </h2>
+        <div className="flex items-center justify-between py-3 border-b border-border">
+          <div>
+            <p className="text-sm font-medium">Icon style</p>
+            <p className="text-xs text-muted-foreground">Use 3D cube icons or flat icons</p>
+          </div>
+          <button
+            className={`w-10 h-6 rounded-full transition-colors ${
+              displaySettings.use3dIcons ? "bg-primary" : "bg-muted"
+            }`}
+            onClick={() => updateDisplaySettings({ use3dIcons: !displaySettings.use3dIcons })}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${
+              displaySettings.use3dIcons ? "translate-x-4" : ""
+            }`} />
+          </button>
+        </div>
       </section>
     </div>
   );
