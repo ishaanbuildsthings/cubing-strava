@@ -23,6 +23,8 @@ interface MockEntry {
   solves: { timeMs: number; penalty: string | null }[];
   average: string | null;
   totalSolves: number;
+  rank?: number;
+  totalCompetitors: number;
 }
 
 const MOCK_ENTRIES: Partial<Record<CubeEvent, MockEntry>> = {
@@ -37,6 +39,8 @@ const MOCK_ENTRIES: Partial<Record<CubeEvent, MockEntry>> = {
     ],
     average: "9.26",
     totalSolves: 5,
+    rank: 3,
+    totalCompetitors: 847,
   },
   [CubeEvent.TWO]: {
     status: "in-progress",
@@ -46,6 +50,7 @@ const MOCK_ENTRIES: Partial<Record<CubeEvent, MockEntry>> = {
     ],
     average: null,
     totalSolves: 5,
+    totalCompetitors: 623,
   },
 };
 
@@ -339,11 +344,21 @@ export default function TourneyPage() {
 
 // --- Compete Tab: Event Card ---
 
+// Get the tournament format label for an event.
+function getFormatLabel(config: typeof EVENT_CONFIGS[number]): string {
+  if (config.tournamentRankBy === "single") {
+    return `Best of ${config.tournamentSolveCount}`;
+  }
+  return config.tournamentSolveCount === 5 ? "Ao5" : "Mo3";
+}
+
 function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; entry?: MockEntry }) {
   const status = entry?.status ?? "not-started";
   const completedSolves = entry?.solves.length ?? 0;
   const totalSolves = config.tournamentSolveCount;
-  const isAo5 = totalSolves === 5;
+  const formatLabel = getFormatLabel(config);
+  // Mock: show a default competitor count even for events without an entry.
+  const totalCompetitors = entry?.totalCompetitors ?? 412;
 
   return (
     <button className="rounded-lg bg-card border border-border p-4 hover:bg-muted transition-colors text-left space-y-3">
@@ -351,22 +366,32 @@ function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; en
         <EventIcon event={config} size={36} />
         <span className="font-extrabold text-lg flex-1">{config.name}</span>
         <span className="text-xs font-bold text-muted-foreground">
-          {isAo5 ? "Ao5" : "Mo3"}
+          {formatLabel}
         </span>
       </div>
 
       {status === "not-started" && (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Play className="w-3.5 h-3.5" />
-          <span className="text-xs font-semibold">Start</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Play className="w-3.5 h-3.5" />
+            <span className="text-xs font-semibold">Start</span>
+          </div>
+          {totalCompetitors > 0 && (
+            <span className="text-[10px] text-muted-foreground">{totalCompetitors} competing</span>
+          )}
         </div>
       )}
 
       {status === "in-progress" && entry && (
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-yellow-500">
-            <Play className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-yellow-500">
+              <Play className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
+            </div>
+            {totalCompetitors > 0 && (
+              <span className="text-[10px] text-muted-foreground">{totalCompetitors} competing</span>
+            )}
           </div>
           <p className="text-[11px] font-mono tabular-nums text-muted-foreground leading-relaxed">
             {entry.solves.map(formatSolveTime).join("  ")}
@@ -378,10 +403,16 @@ function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; en
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-base font-mono tabular-nums font-extrabold">{entry.average}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Done</span>
+            {entry.rank && (
+              <span className="text-[10px] font-bold text-primary">
+                #{entry.rank} / {totalCompetitors}
+              </span>
+            )}
           </div>
           <p className="text-[11px] font-mono tabular-nums text-muted-foreground leading-relaxed">
-            {isAo5 ? formatAo5Times(entry.solves) : entry.solves.map(formatSolveTime).join("  ")}
+            {config.tournamentSolveCount === 5 && config.tournamentRankBy === "average"
+              ? formatAo5Times(entry.solves)
+              : entry.solves.map(formatSolveTime).join("  ")}
           </p>
         </div>
       )}
@@ -554,7 +585,7 @@ function EventLeaderboardDetail({
             <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted transition-colors">
               <EventIcon event={eventConfig} size={24} />
               <span className="font-extrabold text-lg">{eventConfig.name}</span>
-              <span className="text-xs font-bold text-muted-foreground">{isAo5 ? "Ao5" : "Mo3"}</span>
+              <span className="text-xs font-bold text-muted-foreground">{getFormatLabel(eventConfig)}</span>
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-48">
