@@ -227,7 +227,8 @@ export default function TourneyPage() {
 
   const navigateContest = (direction: "prev" | "next") => {
     const next = viewingContest + (direction === "prev" ? -1 : 1);
-    updateParams({ contest: String(next), event: null });
+    // Reset to overview when switching contests.
+    updateParams({ contest: String(next), event: null, page: null });
   };
 
   useEffect(() => {
@@ -245,7 +246,26 @@ export default function TourneyPage() {
       {/* Header */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-5xl mx-auto w-full">
-          <h1 className="text-3xl font-extrabold">Daily Contest {viewingContest}</h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigateContest("prev")}
+              disabled={viewingContest <= 1}
+              className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-3xl font-extrabold">Daily Contest {viewingContest}</h1>
+            <button
+              onClick={() => navigateContest("next")}
+              disabled={viewingContest >= TOURNAMENT_NUMBER}
+              className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            {isCurrent && (
+              <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Current</span>
+            )}
+          </div>
           {isCurrent ? (
             <p className="text-sm text-muted-foreground mt-1">
               <span className="font-mono font-bold">{countdown}</span> remaining
@@ -292,19 +312,13 @@ export default function TourneyPage() {
           ) : validEvent ? (
             <EventLeaderboardDetail
               event={validEvent}
-              contestNumber={viewingContest}
-              currentContestNumber={TOURNAMENT_NUMBER}
               onBack={() => setSelectedEvent(null)}
-              navigateContest={navigateContest}
               onChangeEvent={setSelectedEvent}
               page={page}
               onPageChange={setPage}
             />
           ) : (
             <LeaderboardOverview
-              contestNumber={viewingContest}
-              currentContestNumber={TOURNAMENT_NUMBER}
-              navigateContest={navigateContest}
               onSelectEvent={setSelectedEvent}
             />
           )}
@@ -364,35 +378,12 @@ function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; en
 // --- Leaderboard Tab: Overview (stubs for all events) ---
 
 function LeaderboardOverview({
-  contestNumber, currentContestNumber, navigateContest, onSelectEvent,
+  onSelectEvent,
 }: {
-  contestNumber: number;
-  currentContestNumber: number;
-  navigateContest: (dir: "prev" | "next") => void;
   onSelectEvent: (event: CubeEvent) => void;
 }) {
   return (
     <div className="space-y-6">
-      {/* Contest navigation */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={() => navigateContest("prev")}
-          disabled={contestNumber <= 1}
-          className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <span className="text-sm font-semibold min-w-[10rem] text-center">
-          Contest {contestNumber}{contestNumber === currentContestNumber ? " (Current)" : ""}
-        </span>
-        <button
-          onClick={() => navigateContest("next")}
-          disabled={contestNumber >= currentContestNumber}
-          className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
 
       {/* Event sections — vertically stacked */}
       <div className="space-y-6">
@@ -517,13 +508,10 @@ function LeaderboardOverview({
 // --- Leaderboard Tab: Full table for one event ---
 
 function EventLeaderboardDetail({
-  event, onBack, contestNumber, currentContestNumber, navigateContest, onChangeEvent, page, onPageChange,
+  event, onBack, onChangeEvent, page, onPageChange,
 }: {
   event: CubeEvent;
   onBack: () => void;
-  contestNumber: number;
-  currentContestNumber: number;
-  navigateContest: (dir: "prev" | "next") => void;
   onChangeEvent: (event: CubeEvent) => void;
   page: number;
   onPageChange: (page: number) => void;
@@ -568,26 +556,6 @@ function EventLeaderboardDetail({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigateContest("prev")}
-            disabled={contestNumber <= 1}
-            className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-semibold min-w-[10rem] text-center">
-            Contest {contestNumber}{contestNumber === currentContestNumber ? " (Current)" : ""}
-          </span>
-          <button
-            onClick={() => navigateContest("next")}
-            disabled={contestNumber >= currentContestNumber}
-            className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
