@@ -1,25 +1,21 @@
-// Tournament day rollover: 2 AM Eastern Time = 7 AM UTC.
-// Everything before 7 AM UTC belongs to the previous tournament day.
-const ROLLOVER_HOUR_UTC = 7;
+// Tournament day rollover: midnight PST = 8 AM UTC.
+// The tournament date equals the PST calendar date.
+const ROLLOVER_HOUR_UTC = 8;
 
 // Grace window: users who started before rollover get this long to finish.
 const GRACE_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Returns the current tournament date as a "YYYY-MM-DD" string.
- * The tournament day rolls over at 2 AM ET (7 AM UTC), so
- * 6:59 AM UTC on March 27 → tournament date is "2026-03-26".
- * 7:00 AM UTC on March 27 → tournament date is "2026-03-27".
+ * Since rollover is midnight PST (8 AM UTC), the tournament date
+ * is simply the current date in PST/America-Los_Angeles.
  */
 export function getTournamentDate(now: Date = new Date()): string {
-  const adjusted = new Date(now);
-
-  // If we're before the rollover hour, this is still yesterday's tournament.
-  if (adjusted.getUTCHours() < ROLLOVER_HOUR_UTC) {
-    adjusted.setUTCDate(adjusted.getUTCDate() - 1);
-  }
-
-  return adjusted.toISOString().slice(0, 10);
+  // Format as YYYY-MM-DD in PST (America/Los_Angeles handles PST/PDT).
+  const parts = now.toLocaleDateString("en-CA", {
+    timeZone: "America/Los_Angeles",
+  });
+  return parts; // "en-CA" locale returns "YYYY-MM-DD" format.
 }
 
 /**
@@ -31,7 +27,7 @@ export function getNextRollover(now: Date = new Date()): Date {
   next.setUTCMinutes(0, 0, 0);
 
   if (now.getUTCHours() >= ROLLOVER_HOUR_UTC) {
-    // Rollover is tomorrow at 7 AM UTC.
+    // Rollover is tomorrow at 8 AM UTC.
     next.setUTCDate(next.getUTCDate() + 1);
   }
 
