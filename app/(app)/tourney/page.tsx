@@ -250,7 +250,7 @@ export default function TourneyPage() {
                                 const isBestOrWorst = isAo5 && (i === bestIdx || i === worstIdx);
                                 const display = formatSolveTime(solve);
                                 return (
-                                  <td key={i} className="px-2 py-3 text-right font-mono tabular-nums text-muted-foreground">
+                                  <td key={i} className="px-2 py-3 text-right font-mono tabular-nums ">
                                     {isBestOrWorst ? `(${display})` : display}
                                   </td>
                                 );
