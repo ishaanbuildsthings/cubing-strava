@@ -233,19 +233,52 @@ export default function TourneyPage() {
   );
 }
 
+// Format a solve time, applying +2 penalty if needed.
+function formatSolveTime(solve: { timeMs: number; penalty: string | null }): string {
+  if (solve.penalty === "dnf") return "DNF";
+  const time = formatTime(solve.penalty === "+2" ? solve.timeMs + 2000 : solve.timeMs);
+  return solve.penalty === "+2" ? `${time}+` : time;
+}
+
+// For ao5: parenthesize the best and worst times (WCA convention).
+function formatAo5Times(solves: { timeMs: number; penalty: string | null }[]): string {
+  if (solves.length !== 5) return solves.map(formatSolveTime).join("  ");
+
+  const effectiveTimes = solves.map((s) => {
+    if (s.penalty === "dnf") return Infinity;
+    return s.penalty === "+2" ? s.timeMs + 2000 : s.timeMs;
+  });
+
+  let bestIdx = 0;
+  let worstIdx = 0;
+  effectiveTimes.forEach((t, i) => {
+    if (t < effectiveTimes[bestIdx]) bestIdx = i;
+    if (t > effectiveTimes[worstIdx]) worstIdx = i;
+  });
+
+  return solves
+    .map((s, i) => {
+      const formatted = formatSolveTime(s);
+      if (i === bestIdx || i === worstIdx) return `(${formatted})`;
+      return formatted;
+    })
+    .join("  ");
+}
+
 function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; entry?: MockEntry }) {
   const status = entry?.status ?? "not-started";
-  const totalSolves = config.tournamentSolveCount;
   const completedSolves = entry?.solves.length ?? 0;
+  const totalSolves = config.tournamentSolveCount;
+  const isAo5 = totalSolves === 5;
 
   return (
     <button className="rounded-lg bg-card border border-border p-4 hover:bg-muted transition-colors text-left space-y-3">
-      {/* Top row: icon + event name + badge */}
+      {/* Top row: icon + event name */}
       <div className="flex items-center gap-3">
         <EventIcon event={config} size={36} />
         <span className="font-extrabold text-lg flex-1">{config.name}</span>
         <span className="text-xs font-bold text-muted-foreground">
-          {totalSolves === 5 ? "Ao5" : "Mo3"}
+          {isAo5 ? "Ao5" : "Mo3"}
         </span>
       </div>
 
@@ -257,51 +290,24 @@ function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; en
         </div>
       )}
 
-      {status === "in-progress" && entry && (
-        <div className="space-y-2">
-          {/* Progress dots */}
-          <div className="flex gap-1">
-            {Array.from({ length: totalSolves }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 flex-1 rounded-full ${
-                  i < completedSolves ? "bg-yellow-500" : "bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-          {/* Completed times */}
-          <div className="flex gap-1.5 flex-wrap">
-            {entry.solves.map((solve, i) => (
-              <span key={i} className="text-[11px] font-mono tabular-nums text-muted-foreground">
-                {solve.penalty === "dnf" ? "DNF" : formatTime(solve.penalty === "+2" ? solve.timeMs + 2000 : solve.timeMs)}
-              </span>
-            ))}
-          </div>
+      {status === "in-progress" && (
+        <div className="flex items-center gap-2 text-yellow-500">
+          <Play className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
         </div>
       )}
 
       {status === "completed" && entry && (
-        <div className="space-y-2">
-          {/* Progress dots — all filled */}
-          <div className="flex gap-1">
-            {Array.from({ length: totalSolves }).map((_, i) => (
-              <div key={i} className="h-1.5 flex-1 rounded-full bg-primary" />
-            ))}
-          </div>
+        <div className="space-y-1.5">
           {/* Average */}
           <div className="flex items-center justify-between">
-            <span className="text-sm font-mono tabular-nums font-extrabold">{entry.average}</span>
+            <span className="text-base font-mono tabular-nums font-extrabold">{entry.average}</span>
             <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Done</span>
           </div>
-          {/* Individual times */}
-          <div className="flex gap-1.5 flex-wrap">
-            {entry.solves.map((solve, i) => (
-              <span key={i} className="text-[11px] font-mono tabular-nums text-muted-foreground">
-                {solve.penalty === "dnf" ? "DNF" : formatTime(solve.penalty === "+2" ? solve.timeMs + 2000 : solve.timeMs)}
-              </span>
-            ))}
-          </div>
+          {/* Individual times with WCA formatting */}
+          <p className="text-[11px] font-mono tabular-nums text-muted-foreground leading-relaxed">
+            {isAo5 ? formatAo5Times(entry.solves) : entry.solves.map(formatSolveTime).join("  ")}
+          </p>
         </div>
       )}
     </button>
