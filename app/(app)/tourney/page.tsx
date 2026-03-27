@@ -217,7 +217,7 @@ export default function TourneyPage() {
           ) : selectedLeaderboardEvent ? (
             <EventLeaderboardDetail
               event={selectedLeaderboardEvent}
-              date={displayDate}
+              displayDate={displayDate}
               isToday={isToday}
               onBack={() => setSelectedLeaderboardEvent(null)}
               navigateDate={navigateDate}
