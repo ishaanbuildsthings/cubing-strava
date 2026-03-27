@@ -41,9 +41,9 @@ model Event {
 
 enum PbType {
   single
+  mo3
   avg5
   avg12
-  avg50
   avg100
 }
 
