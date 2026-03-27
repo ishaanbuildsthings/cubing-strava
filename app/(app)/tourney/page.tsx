@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getNextRollover } from "@/lib/tournament/date";
+import { getNextRollover, getTournamentDate } from "@/lib/tournament/date";
 
 type Tab = "compete" | "leaderboard";
 
@@ -196,6 +196,16 @@ export default function TourneyPage() {
   const [countdown, setCountdown] = useState("");
   const isCurrent = viewingContest === TOURNAMENT_NUMBER;
 
+  // Compute the date for the viewed contest.
+  // Current contest uses today's tournament date. Past contests offset by the difference.
+  const todayTournamentDate = getTournamentDate();
+  const dayOffset = TOURNAMENT_NUMBER - viewingContest;
+  const contestDate = new Date(todayTournamentDate + "T12:00:00Z");
+  contestDate.setUTCDate(contestDate.getUTCDate() - dayOffset);
+  const contestDateStr = contestDate.toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+
   // Update URL params without full navigation.
   const updateParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -265,13 +275,13 @@ export default function TourneyPage() {
               </button>
             </div>
           </div>
-          {isCurrent ? (
-            <p className="text-sm text-muted-foreground mt-1">
-              <span className="font-mono font-bold">{countdown}</span> remaining
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground mt-1">Ended</p>
-          )}
+          <p className="text-sm text-muted-foreground mt-1">
+            {contestDateStr}
+            {isCurrent && (
+              <> · <span className="font-mono font-bold">{countdown}</span> remaining</>
+            )}
+            {!isCurrent && " · Ended"}
+          </p>
 
           {/* Tabs */}
           <div className="flex gap-1 mt-4 border-b border-border">
