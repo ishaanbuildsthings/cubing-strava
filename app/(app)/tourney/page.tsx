@@ -321,15 +321,20 @@ function LeaderboardOverview({
           const solveCount = config.tournamentSolveCount;
 
           return (
-            <div key={config.id} className="rounded-lg bg-card border border-border overflow-hidden">
-              {/* Event header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+            <div key={config.id}>
+              {/* Event header — above the table */}
+              <div className="flex items-center gap-3 mb-2">
                 <EventIcon event={config} size={24} />
                 <span className="font-extrabold text-base flex-1">{config.name}</span>
-                <span className="text-xs font-bold text-muted-foreground">
-                  {isAo5 ? "Ao5" : "Mo3"}
-                </span>
+                <button
+                  onClick={() => onSelectEvent(config.id)}
+                  className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  View all <ChevronRight className="w-3 h-3" />
+                </button>
               </div>
+
+              <div className="rounded-lg bg-card border border-border overflow-hidden">
 
               {/* Mini table — top 3 with individual solves */}
               <table className="w-full text-sm">
@@ -425,13 +430,7 @@ function LeaderboardOverview({
                 </tbody>
               </table>
 
-              {/* View all button */}
-              <button
-                onClick={() => onSelectEvent(config.id)}
-                className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors border-t border-border"
-              >
-                View all results →
-              </button>
+              </div>
             </div>
           );
         })}
