@@ -256,15 +256,16 @@ export default function TourneyPage() {
 
                 return (
                   <div className="rounded-lg bg-card border border-border">
-                    <table className="w-full text-sm table-fixed">
+                    <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wider">
                           <th className="px-3 py-2 text-left w-10">#</th>
                           <th className="px-3 py-2 text-left">Player</th>
-                          <th className="px-4 py-2 text-right pr-6">Single</th>
-                          <th className="px-4 py-2 text-right pr-8">{isAo5 ? "Avg" : "Mo3"}</th>
+                          <th className="pl-6 pr-4 py-2 text-right whitespace-nowrap">Single</th>
+                          <th className="pl-6 pr-4 py-2 text-right whitespace-nowrap">{isAo5 ? "Avg" : "Mo3"}</th>
+                          <th className="w-4" />
                           {Array.from({ length: solveCount }).map((_, i) => (
-                            <th key={i} className="px-2 py-2 text-right">{i + 1}</th>
+                            <th key={i} className="px-1.5 py-2 text-right whitespace-nowrap">{i + 1}</th>
                           ))}
                         </tr>
                       </thead>
@@ -305,17 +306,18 @@ export default function TourneyPage() {
                                   )}
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-right font-mono tabular-nums font-bold pr-6">
+                              <td className="pl-6 pr-4 py-3 text-right font-mono tabular-nums font-bold">
                                 {getBestSingle(entry.solves)}
                               </td>
-                              <td className="px-4 py-3 text-right font-mono tabular-nums font-bold pr-8">
+                              <td className="pl-6 pr-4 py-3 text-right font-mono tabular-nums font-bold">
                                 {entry.average}
                               </td>
+                              <td />
                               {entry.solves.map((solve, i) => {
                                 const isBestOrWorst = isAo5 && (i === bestIdx || i === worstIdx);
                                 const display = formatSolveTime(solve);
                                 return (
-                                  <td key={i} className="px-2 py-3 text-right font-mono tabular-nums">
+                                  <td key={i} className="px-1.5 py-3 text-right font-mono tabular-nums">
                                     {isBestOrWorst ? `(${display})` : display}
                                   </td>
                                 );
