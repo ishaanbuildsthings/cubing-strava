@@ -168,16 +168,10 @@ export default function TourneyPage() {
       {/* Header */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-5xl mx-auto w-full">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-extrabold">Daily Tournament</h1>
-            <span className="text-lg font-bold text-muted-foreground">#{TOURNAMENT_NUMBER}</span>
-          </div>
-
-          {/* Countdown — hero element */}
-          <div className="mt-2 flex items-center gap-3">
-            <p className="text-4xl font-extrabold font-mono tabular-nums">{countdown}</p>
-            <p className="text-sm text-muted-foreground">remaining</p>
-          </div>
+          <h1 className="text-3xl font-extrabold">Daily Tournament {TOURNAMENT_NUMBER}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            <span className="font-mono font-bold">{countdown}</span> remaining
+          </p>
 
           {/* Tabs */}
           <div className="flex gap-1 mt-4 border-b border-border">
