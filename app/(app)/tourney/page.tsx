@@ -351,7 +351,7 @@ function LeaderboardOverview({
                   {selfEntry && (() => {
                     const { bestIdx, worstIdx } = getBestWorst(selfEntry.solves);
                     return (
-                      <tr className="bg-orange-500/5 border-l-2 border-l-orange-500 border-b-2 border-b-orange-500/20">
+                      <tr className="bg-orange-500/[0.03] border-l-2 border-l-orange-500/40 border-b border-b-orange-500/10">
                         <td className="px-4 py-2.5 w-10 text-center text-sm font-bold text-orange-400">
                           {selfEntry.rank}
                         </td>
@@ -384,7 +384,7 @@ function LeaderboardOverview({
                     return (
                       <tr
                         key={entry.rank}
-                        className={rowIdx % 2 === 1 ? "bg-muted/20" : ""}
+                        className={rowIdx % 2 === 1 ? "bg-muted/40" : ""}
                       >
                         <td className="px-4 py-2.5 w-10 text-center">
                           {rankDisplay(entry.rank)}
@@ -501,7 +501,7 @@ function EventLeaderboardDetail({
               if (!selfEntry) return null;
               const { bestIdx, worstIdx } = getBestWorst(selfEntry.solves);
               return (
-                <tr className="bg-orange-500/5 border-l-2 border-l-orange-500 border-b-2 border-b-orange-500/20">
+                <tr className="bg-orange-500/[0.03] border-l-2 border-l-orange-500/40 border-b border-b-orange-500/10">
                   <td className="px-4 py-3 text-center text-sm font-bold text-orange-400">
                     {selfEntry.rank}
                   </td>
@@ -547,7 +547,7 @@ function EventLeaderboardDetail({
               return (
                 <tr
                   key={entry.rank}
-                  className={rowIdx % 2 === 1 ? "bg-muted/20" : ""}
+                  className={rowIdx % 2 === 1 ? "bg-muted/40" : ""}
                 >
                   <td className="px-4 py-3 text-center">
                     {rankDisplay(entry.rank)}
