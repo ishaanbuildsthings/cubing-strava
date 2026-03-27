@@ -63,6 +63,7 @@ interface MockLeaderboardEntry {
   country: string;
   profilePictureUrl: string | null;
   average: string;
+  single: string;
   isSelf: boolean;
   solves: { timeMs: number; penalty: string | null }[];
 }
@@ -93,30 +94,97 @@ const MOCK_NAMES = [
   ["Tina", "Bauer", "AT"], ["Aiden", "Moore", "US"], ["Kira", "Suzuki", "JP"],
 ] as const;
 
-const MOCK_LEADERBOARD: MockLeaderboardEntry[] = MOCK_NAMES.map(([firstName, lastName, country], i) => {
-  const baseTime = 6500 + i * 400 + Math.floor(Math.random() * 200);
-  const solves = Array.from({ length: 5 }, () => ({
-    timeMs: baseTime + Math.floor(Math.random() * 3000 - 1000),
-    penalty: Math.random() < 0.03 ? "dnf" as const : Math.random() < 0.05 ? "+2" as const : null,
-  }));
-  const validTimes = solves
-    .map((s) => s.penalty === "dnf" ? Infinity : s.penalty === "+2" ? s.timeMs + 2000 : s.timeMs)
-    .sort((a, b) => a - b);
-  const avg = validTimes.length >= 5
-    ? (validTimes[1] + validTimes[2] + validTimes[3]) / 3
-    : validTimes.reduce((a, b) => a + b, 0) / validTimes.length;
-  return {
-    rank: i + 1,
-    username: `${firstName.toLowerCase()}${lastName.toLowerCase().slice(0, 3)}`,
-    firstName: firstName as string,
-    lastName: lastName as string,
-    country: country as string,
-    profilePictureUrl: null,
-    average: formatTime(Math.round(avg)),
-    isSelf: i === 27, // Put "you" at rank 28
-    solves,
+// Seeded random to avoid hydration mismatches.
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return s / 2147483647;
   };
-});
+}
+
+// Generate mock leaderboard entries for a given event config.
+function generateMockLeaderboard(config: typeof EVENT_CONFIGS[number]): MockLeaderboardEntry[] {
+  const solveCount = config.tournamentSolveCount;
+  const rankBy = config.tournamentRankBy;
+  // Use event id as seed for deterministic mock data.
+  const seed = config.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rand = seededRandom(seed);
+
+  const entries = MOCK_NAMES.map(([firstName, lastName, country], i) => {
+    const baseTime = 6500 + i * 400 + Math.floor(rand() * 200);
+    const solves = Array.from({ length: solveCount }, () => ({
+      timeMs: baseTime + Math.floor(rand() * 3000 - 1000),
+      penalty: rand() < 0.03 ? "dnf" as const : rand() < 0.05 ? "+2" as const : null,
+    }));
+
+    const effectiveTimes = solves.map((s) =>
+      s.penalty === "dnf" ? Infinity : s.penalty === "+2" ? s.timeMs + 2000 : s.timeMs
+    );
+
+    // Compute average based on format.
+    let avg: number;
+    if (solveCount === 5 && rankBy === "average") {
+      // Ao5: drop best and worst, average middle 3.
+      const sorted = [...effectiveTimes].sort((a, b) => a - b);
+      const middle = sorted.slice(1, 4);
+      avg = middle.some((t) => t === Infinity) ? Infinity : Math.round(middle.reduce((a, b) => a + b, 0) / 3);
+    } else if (solveCount === 3 && rankBy === "average") {
+      // Mo3: mean of all 3.
+      avg = effectiveTimes.some((t) => t === Infinity) ? Infinity : Math.round(effectiveTimes.reduce((a, b) => a + b, 0) / 3);
+    } else {
+      // Bo5/Bo3 (BLD): use average for display, but ranking is by single.
+      if (solveCount === 5) {
+        const sorted = [...effectiveTimes].sort((a, b) => a - b);
+        const middle = sorted.slice(1, 4);
+        avg = middle.some((t) => t === Infinity) ? Infinity : Math.round(middle.reduce((a, b) => a + b, 0) / 3);
+      } else {
+        avg = effectiveTimes.some((t) => t === Infinity) ? Infinity : Math.round(effectiveTimes.reduce((a, b) => a + b, 0) / 3);
+      }
+    }
+
+    const single = Math.min(...effectiveTimes);
+
+    return {
+      rank: 0, // computed after sort
+      username: `${(firstName as string).toLowerCase()}${(lastName as string).toLowerCase().slice(0, 3)}`,
+      firstName: firstName as string,
+      lastName: lastName as string,
+      country: country as string,
+      profilePictureUrl: null,
+      average: avg === Infinity ? "DNF" : formatTime(avg),
+      single: single === Infinity ? "DNF" : formatTime(single),
+      isSelf: i === 27,
+      solves,
+    };
+  });
+
+  // Sort by the right metric.
+  entries.sort((a, b) => {
+    if (rankBy === "single") {
+      const aVal = a.single === "DNF" ? Infinity : parseFloat(a.single);
+      const bVal = b.single === "DNF" ? Infinity : parseFloat(b.single);
+      return aVal - bVal;
+    }
+    const aVal = a.average === "DNF" ? Infinity : parseFloat(a.average);
+    const bVal = b.average === "DNF" ? Infinity : parseFloat(b.average);
+    return aVal - bVal;
+  });
+
+  // Assign ranks.
+  entries.forEach((e, i) => { e.rank = i + 1; });
+
+  return entries;
+}
+
+// Cache generated leaderboards to avoid regenerating on every render.
+const leaderboardCache: Partial<Record<CubeEvent, MockLeaderboardEntry[]>> = {};
+function getMockLeaderboard(config: typeof EVENT_CONFIGS[number]): MockLeaderboardEntry[] {
+  if (!leaderboardCache[config.id]) {
+    leaderboardCache[config.id] = generateMockLeaderboard(config);
+  }
+  return leaderboardCache[config.id]!;
+}
 
 // --- Helpers ---
 
@@ -433,9 +501,9 @@ function LeaderboardOverview({
       {/* Event sections — vertically stacked */}
       <div className="space-y-6">
         {EVENT_CONFIGS.map((config) => {
-          const top3 = MOCK_LEADERBOARD.slice(0, 3);
-          const selfEntry = MOCK_LEADERBOARD.find((e) => e.isSelf);
-          const isAo5 = config.tournamentSolveCount === 5;
+          const leaderboard = getMockLeaderboard(config);
+          const top3 = leaderboard.slice(0, 3);
+          const selfEntry = leaderboard.find((e) => e.isSelf);
           const solveCount = config.tournamentSolveCount;
 
           return (
@@ -461,7 +529,7 @@ function LeaderboardOverview({
                     <th className="px-4 py-2 text-left w-10">#</th>
                     <th className="py-2 text-left">Player</th>
                     <th className="pl-8 pr-4 py-2 text-right">Single</th>
-                    <th className="pl-6 pr-4 py-2 text-right">{isAo5 ? "Avg" : "Mo3"}</th>
+                    <th className="pl-6 pr-4 py-2 text-right">{getFormatLabel(config)}</th>
                     <th className="w-4" />
                     {Array.from({ length: solveCount }).map((_, i) => (
                       <th key={i} className="px-2 py-2 text-right">{i + 1}</th>
@@ -488,7 +556,7 @@ function LeaderboardOverview({
                         </td>
                         <td />
                         {selfEntry.solves.map((solve, i) => {
-                          const isBestOrWorst = isAo5 && (i === bestIdx || i === worstIdx);
+                          const isBestOrWorst = solveCount === 5 && (i === bestIdx || i === worstIdx);
                           const display = formatSolveTime(solve);
                           return (
                             <td key={i} className="px-2 py-2.5 text-right font-mono tabular-nums font-bold">
@@ -527,7 +595,7 @@ function LeaderboardOverview({
                         </td>
                         <td />
                         {entry.solves.map((solve, i) => {
-                          const isBestOrWorst = isAo5 && (i === bestIdx || i === worstIdx);
+                          const isBestOrWorst = solveCount === 5 && (i === bestIdx || i === worstIdx);
                           const display = formatSolveTime(solve);
                           return (
                             <td key={i} className="px-2 py-2.5 text-right font-mono tabular-nums font-bold">
@@ -563,15 +631,15 @@ function EventLeaderboardDetail({
 }) {
   const eventConfig = EVENT_MAP[event];
   const solveCount = eventConfig.tournamentSolveCount;
-  const isAo5 = solveCount === 5;
+  const leaderboard = getMockLeaderboard(eventConfig);
 
-  const totalPages = Math.ceil(MOCK_LEADERBOARD.length / RESULTS_PER_PAGE);
+  const totalPages = Math.ceil(leaderboard.length / RESULTS_PER_PAGE);
   const currentPage = Math.min(page, totalPages);
-  const pageEntries = MOCK_LEADERBOARD.slice(
+  const pageEntries = leaderboard.slice(
     (currentPage - 1) * RESULTS_PER_PAGE,
     currentPage * RESULTS_PER_PAGE
   );
-  const selfEntry = MOCK_LEADERBOARD.find((e) => e.isSelf);
+  const selfEntry = leaderboard.find((e) => e.isSelf);
 
   return (
     <div className="space-y-4">
@@ -612,7 +680,7 @@ function EventLeaderboardDetail({
               <th className="px-4 py-2 text-left w-10">#</th>
               <th className="px-3 py-2 text-left">Player</th>
               <th className="pl-8 pr-4 py-2 text-right">Single</th>
-              <th className="pl-6 pr-4 py-2 text-right">{isAo5 ? "Avg" : "Mo3"}</th>
+              <th className="pl-6 pr-4 py-2 text-right">{getFormatLabel(eventConfig)}</th>
               <th className="w-4" />
               {Array.from({ length: solveCount }).map((_, i) => (
                 <th key={i} className="px-2 py-2 text-right">{i + 1}</th>
@@ -655,7 +723,7 @@ function EventLeaderboardDetail({
                   </td>
                   <td />
                   {selfEntry.solves.map((solve, i) => {
-                    const isBW = isAo5 && (i === bestIdx || i === worstIdx);
+                    const isBW = solveCount === 5 && (i === bestIdx || i === worstIdx);
                     return (
                       <td key={i} className="px-2 py-3 text-right font-mono tabular-nums font-bold">
                         {isBW ? `(${formatSolveTime(solve)})` : formatSolveTime(solve)}
@@ -704,7 +772,7 @@ function EventLeaderboardDetail({
                   </td>
                   <td />
                   {entry.solves.map((solve, i) => {
-                    const isBestOrWorst = isAo5 && (i === bestIdx || i === worstIdx);
+                    const isBestOrWorst = solveCount === 5 && (i === bestIdx || i === worstIdx);
                     const display = formatSolveTime(solve);
                     return (
                       <td key={i} className="px-2 py-3 text-right font-mono tabular-nums font-bold">
