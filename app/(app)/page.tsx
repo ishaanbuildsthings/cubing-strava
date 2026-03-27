@@ -18,7 +18,8 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
-import { effectiveTime, getPracticeStats, type EventStats } from "@/lib/cubing/stats";
+import { effectiveTime } from "@/lib/cubing/stats";
+import { getPracticeStats, type EventStats } from "./idb";
 import {
   Popover,
   PopoverContent,

@@ -1,5 +1,59 @@
-import type { CubeEvent } from "@/lib/cubing/events";
-import { recomputeStats, getPracticeStats, type EventStats } from "@/lib/cubing/stats";
+import { CubeEvent } from "@/lib/cubing/events";
+import {
+  computeAo5, computeAo12, computeAo100, computeMo3,
+  computeBestSingle, findBestAverage,
+  type SolveForStats,
+} from "@/lib/cubing/stats";
+
+// --- Practice-specific stat types (IDB only) ---
+
+type StatType = "single" | "ao5" | "ao12" | "ao100" | "mo3";
+
+const STANDARD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12", "ao100"];
+const BLD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12"];
+
+const BLD_EVENTS = new Set([CubeEvent.THREE_BLD, CubeEvent.FOUR_BLD, CubeEvent.FIVE_BLD]);
+
+// Returns which stats to track for a given event in practice mode.
+export function getPracticeStats(event: CubeEvent): StatType[] {
+  return BLD_EVENTS.has(event) ? BLD_STATS : STANDARD_STATS;
+}
+
+export interface EventStats {
+  event: string;
+  bestSingle: number | null;
+  bestAo5: number | null;
+  bestAo12: number | null;
+  bestAo100: number | null;
+  bestMo3: number | null;
+  currentAo5: number | null;
+  currentAo12: number | null;
+  currentAo100: number | null;
+  currentMo3: number | null;
+}
+
+// Recompute all practice stats from an array of solves (newest first).
+// Only computes stats enabled for this event.
+function recomputeStats(
+  event: string,
+  solves: SolveForStats[],
+  enabledStats: StatType[]
+): EventStats {
+  const has = (s: StatType) => enabledStats.includes(s);
+
+  return {
+    event,
+    bestSingle: has("single") ? computeBestSingle(solves) : null,
+    bestAo5: has("ao5") ? findBestAverage(solves, computeAo5) : null,
+    bestAo12: has("ao12") ? findBestAverage(solves, computeAo12) : null,
+    bestAo100: has("ao100") ? findBestAverage(solves, computeAo100) : null,
+    bestMo3: has("mo3") ? findBestAverage(solves, computeMo3) : null,
+    currentAo5: has("ao5") ? computeAo5(solves) : null,
+    currentAo12: has("ao12") ? computeAo12(solves) : null,
+    currentAo100: has("ao100") ? computeAo100(solves) : null,
+    currentMo3: has("mo3") ? computeMo3(solves) : null,
+  };
+}
 
 const DB_NAME = "cubing-timer";
 const DB_VERSION = 1;
