@@ -83,6 +83,8 @@ model Solve {
 
 model Tournament {
   id        String            @id @default(cuid())
+  number    Int               @unique @default(autoincrement())
+  name      String?           // Optional display name override (e.g. "Holiday Special")
   eventId   String
   date      DateTime
   createdAt DateTime          @default(now())
