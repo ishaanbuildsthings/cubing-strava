@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
+import { getNextRollover } from "@/lib/tournament/date";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +13,41 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type TourneyStatus = "not-started" | "in-progress" | "completed";
 type Tab = "compete" | "leaderboard";
 
-// Mock leaderboard data — will be replaced with real API data.
+// Mock entry data — will be replaced with real API data.
+interface MockEntry {
+  status: "not-started" | "in-progress" | "completed";
+  solves: { timeMs: number; penalty: string | null }[];
+  average: string | null;
+  totalSolves: number;
+}
+
+// Mock different states for demo purposes.
+const MOCK_ENTRIES: Partial<Record<CubeEvent, MockEntry>> = {
+  [CubeEvent.THREE]: {
+    status: "completed",
+    solves: [
+      { timeMs: 9230, penalty: null },
+      { timeMs: 8410, penalty: null },
+      { timeMs: 11540, penalty: null },
+      { timeMs: 7890, penalty: null },
+      { timeMs: 10120, penalty: null },
+    ],
+    average: "9.26",
+    totalSolves: 5,
+  },
+  [CubeEvent.TWO]: {
+    status: "in-progress",
+    solves: [
+      { timeMs: 3210, penalty: null },
+      { timeMs: 4560, penalty: "+2" },
+    ],
+    average: null,
+    totalSolves: 5,
+  },
+};
+
 const MOCK_LEADERBOARD = [
   { rank: 1, username: "cubegod99", firstName: "Max", lastName: "Chen", country: "US", profilePictureUrl: null, average: "7.23", isSelf: false },
   { rank: 2, username: "speedyfingers", firstName: "Yuki", lastName: "Tanaka", country: "JP", profilePictureUrl: null, average: "8.41", isSelf: false },
@@ -27,185 +59,251 @@ const MOCK_LEADERBOARD = [
   { rank: 8, username: "algmaster", firstName: "Sophie", lastName: "Martin", country: "FR", profilePictureUrl: null, average: "13.21", isSelf: false },
 ];
 
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "00:00:00";
+  const hours = Math.floor(ms / 3600000);
+  const minutes = Math.floor((ms % 3600000) / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const centiseconds = Math.floor((ms % 1000) / 10);
+  return `${totalSeconds}.${String(centiseconds).padStart(2, "0")}`;
+}
+
 export default function TourneyPage() {
   const [tab, setTab] = useState<Tab>("compete");
   const [leaderboardEvent, setLeaderboardEvent] = useState<CubeEvent>(CubeEvent.THREE);
+  const [countdown, setCountdown] = useState("");
+
+  // Live countdown to tournament end.
+  useEffect(() => {
+    const update = () => {
+      const remaining = getNextRollover().getTime() - Date.now();
+      setCountdown(formatCountdown(remaining));
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const eventConfig = EVENT_MAP[leaderboardEvent];
 
   return (
-    <div className="flex flex-col flex-1 p-6 overflow-y-auto">
-      <div className="max-w-3xl mx-auto w-full space-y-6">
-        {/* Header */}
-        <div>
+    <div className="flex flex-col flex-1 overflow-y-auto">
+      {/* Header + tabs */}
+      <div className="px-6 pt-6 pb-0">
+        <div className="max-w-3xl mx-auto w-full">
           <h1 className="text-2xl font-extrabold">Daily Tournament</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Compete against everyone. Same scrambles, same day.
           </p>
-        </div>
 
-        {/* Countdown */}
-        <div className="rounded-lg bg-card border border-border p-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Next tournament in
-            </p>
-            <p className="text-2xl font-extrabold font-mono tabular-nums mt-1">
-              --:--:--
-            </p>
+          {/* Tabs — page-level navigation */}
+          <div className="flex gap-1 mt-4 border-b border-border">
+            <button
+              className={`px-4 py-2 text-sm font-bold transition-colors relative ${
+                tab === "compete" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setTab("compete")}
+            >
+              Compete
+              {tab === "compete" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+            </button>
+            <button
+              className={`px-4 py-2 text-sm font-bold transition-colors relative ${
+                tab === "leaderboard" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setTab("leaderboard")}
+            >
+              Leaderboard
+              {tab === "leaderboard" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+            </button>
           </div>
-          <span className="text-3xl" suppressHydrationWarning>🏆</span>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 border-b border-border">
-          <button
-            className={`px-4 py-2 text-sm font-bold transition-colors relative ${
-              tab === "compete"
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            onClick={() => setTab("compete")}
-          >
-            Compete
-            {tab === "compete" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-bold transition-colors relative ${
-              tab === "leaderboard"
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            onClick={() => setTab("leaderboard")}
-          >
-            Leaderboard
-            {tab === "leaderboard" && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
-          </button>
-        </div>
-
-        {/* Tab content */}
-        {tab === "compete" ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {EVENT_CONFIGS.map((config) => {
-              const status: TourneyStatus = "not-started";
-              return (
-                <button
-                  key={config.id}
-                  className="rounded-lg bg-card border border-border p-4 flex items-center gap-3 hover:bg-muted transition-colors text-left"
-                >
-                  <EventIcon event={config} size={32} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm">{config.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {config.tournamentSolveCount === 5 ? "Ao5" : "Mo3"}
-                      {" · "}
-                      {config.tournamentSolveCount} solves
-                    </p>
-                  </div>
-                  <StatusBadge status={status} />
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Event selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 rounded-md bg-card border border-border hover:bg-muted transition-colors">
-                <EventIcon event={eventConfig} size={20} />
-                <span className="font-bold text-sm">{eventConfig.name}</span>
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {EVENT_CONFIGS.map((config) => (
-                  <DropdownMenuItem
-                    key={config.id}
-                    onClick={() => setLeaderboardEvent(config.id)}
-                    className={leaderboardEvent === config.id ? "bg-accent" : ""}
-                  >
-                    <EventIcon event={config} size={16} />
-                    <span>{config.name}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Leaderboard table */}
-            <div className="rounded-lg bg-card border border-border overflow-hidden">
-              {/* Header row */}
-              <div className="grid grid-cols-[2.5rem_1fr_4rem] px-4 py-2 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                <span>#</span>
-                <span>Player</span>
-                <span className="text-right">
-                  {eventConfig.tournamentSolveCount === 5 ? "Ao5" : "Mo3"}
-                </span>
+      {/* Tab content */}
+      <div className="px-6 py-6 flex-1">
+        <div className="max-w-3xl mx-auto w-full space-y-6">
+          {tab === "compete" ? (
+            <>
+              {/* Countdown */}
+              <div className="rounded-lg bg-card border border-border p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    Tournament ends in
+                  </p>
+                  <p className="text-2xl font-extrabold font-mono tabular-nums mt-1">
+                    {countdown}
+                  </p>
+                </div>
+                <span className="text-3xl" suppressHydrationWarning>🏆</span>
               </div>
 
-              {/* Rows */}
-              {MOCK_LEADERBOARD.map((entry) => (
-                <div
-                  key={entry.rank}
-                  className={`grid grid-cols-[2.5rem_1fr_4rem] px-4 py-3 items-center border-b border-border/40 last:border-0 ${
-                    entry.isSelf ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <span className={`text-sm font-bold ${
-                    entry.rank === 1 ? "text-yellow-500" :
-                    entry.rank === 2 ? "text-zinc-400" :
-                    entry.rank === 3 ? "text-amber-700" :
-                    "text-muted-foreground"
-                  }`}>
-                    {entry.rank}
-                  </span>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <UserAvatar
-                      user={{
-                        username: entry.username,
-                        firstName: entry.firstName,
-                        lastName: entry.lastName,
-                        profilePictureUrl: entry.profilePictureUrl,
-                      }}
-                      size="sm"
-                      rounded="full"
-                    />
-                    <span className={`text-sm font-semibold truncate ${entry.isSelf ? "text-primary" : ""}`}>
-                      {entry.username}
-                    </span>
-                    {entry.country && (
-                      <span className="text-xs text-muted-foreground">{entry.country}</span>
-                    )}
-                  </div>
-                  <span className="text-sm font-mono tabular-nums font-bold text-right">
-                    {entry.average}
+              {/* Event grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {EVENT_CONFIGS.map((config) => {
+                  const entry = MOCK_ENTRIES[config.id];
+                  return (
+                    <EventCard key={config.id} config={config} entry={entry} />
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4">
+              {/* Event selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-2 rounded-md bg-card border border-border hover:bg-muted transition-colors">
+                  <EventIcon event={eventConfig} size={20} />
+                  <span className="font-bold text-sm">{eventConfig.name}</span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {EVENT_CONFIGS.map((config) => (
+                    <DropdownMenuItem
+                      key={config.id}
+                      onClick={() => setLeaderboardEvent(config.id)}
+                      className={leaderboardEvent === config.id ? "bg-accent" : ""}
+                    >
+                      <EventIcon event={config} size={16} />
+                      <span>{config.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Leaderboard table */}
+              <div className="rounded-lg bg-card border border-border overflow-hidden">
+                <div className="grid grid-cols-[2.5rem_1fr_4rem] px-4 py-2 border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <span>#</span>
+                  <span>Player</span>
+                  <span className="text-right">
+                    {eventConfig.tournamentSolveCount === 5 ? "Ao5" : "Mo3"}
                   </span>
                 </div>
-              ))}
+
+                {MOCK_LEADERBOARD.map((entry) => (
+                  <div
+                    key={entry.rank}
+                    className={`grid grid-cols-[2.5rem_1fr_4rem] px-4 py-3 items-center border-b border-border/40 last:border-0 ${
+                      entry.isSelf ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <span className={`text-sm font-bold ${
+                      entry.rank === 1 ? "text-yellow-500" :
+                      entry.rank === 2 ? "text-zinc-400" :
+                      entry.rank === 3 ? "text-amber-700" :
+                      "text-muted-foreground"
+                    }`}>
+                      {entry.rank}
+                    </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <UserAvatar
+                        user={{
+                          username: entry.username,
+                          firstName: entry.firstName,
+                          lastName: entry.lastName,
+                          profilePictureUrl: entry.profilePictureUrl,
+                        }}
+                        size="sm"
+                        rounded="full"
+                      />
+                      <span className={`text-sm font-semibold truncate ${entry.isSelf ? "text-primary" : ""}`}>
+                        {entry.username}
+                      </span>
+                      {entry.country && (
+                        <span className="text-xs text-muted-foreground">{entry.country}</span>
+                      )}
+                    </div>
+                    <span className="text-sm font-mono tabular-nums font-bold text-right">
+                      {entry.average}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: TourneyStatus }) {
-  if (status === "completed") {
-    return (
-      <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-        Done
-      </span>
-    );
-  }
-  if (status === "in-progress") {
-    return (
-      <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full">
-        In progress
-      </span>
-    );
-  }
-  return null;
+function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; entry?: MockEntry }) {
+  const status = entry?.status ?? "not-started";
+  const totalSolves = config.tournamentSolveCount;
+  const completedSolves = entry?.solves.length ?? 0;
+
+  return (
+    <button className="rounded-lg bg-card border border-border p-4 hover:bg-muted transition-colors text-left space-y-3">
+      {/* Top row: icon + event name + badge */}
+      <div className="flex items-center gap-3">
+        <EventIcon event={config} size={36} />
+        <span className="font-extrabold text-lg flex-1">{config.name}</span>
+        <span className="text-xs font-bold text-muted-foreground">
+          {totalSolves === 5 ? "Ao5" : "Mo3"}
+        </span>
+      </div>
+
+      {/* Status area */}
+      {status === "not-started" && (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Play className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold">Start</span>
+        </div>
+      )}
+
+      {status === "in-progress" && entry && (
+        <div className="space-y-2">
+          {/* Progress dots */}
+          <div className="flex gap-1">
+            {Array.from({ length: totalSolves }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 flex-1 rounded-full ${
+                  i < completedSolves ? "bg-yellow-500" : "bg-muted"
+                }`}
+              />
+            ))}
+          </div>
+          {/* Completed times */}
+          <div className="flex gap-1.5 flex-wrap">
+            {entry.solves.map((solve, i) => (
+              <span key={i} className="text-[11px] font-mono tabular-nums text-muted-foreground">
+                {solve.penalty === "dnf" ? "DNF" : formatTime(solve.penalty === "+2" ? solve.timeMs + 2000 : solve.timeMs)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {status === "completed" && entry && (
+        <div className="space-y-2">
+          {/* Progress dots — all filled */}
+          <div className="flex gap-1">
+            {Array.from({ length: totalSolves }).map((_, i) => (
+              <div key={i} className="h-1.5 flex-1 rounded-full bg-primary" />
+            ))}
+          </div>
+          {/* Average */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-mono tabular-nums font-extrabold">{entry.average}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Done</span>
+          </div>
+          {/* Individual times */}
+          <div className="flex gap-1.5 flex-wrap">
+            {entry.solves.map((solve, i) => (
+              <span key={i} className="text-[11px] font-mono tabular-nums text-muted-foreground">
+                {solve.penalty === "dnf" ? "DNF" : formatTime(solve.penalty === "+2" ? solve.timeMs + 2000 : solve.timeMs)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </button>
+  );
 }
