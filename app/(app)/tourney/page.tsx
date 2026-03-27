@@ -168,7 +168,7 @@ export default function TourneyPage() {
       {/* Header */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-5xl mx-auto w-full">
-          <h1 className="text-3xl font-extrabold">Daily Tournament {TOURNAMENT_NUMBER}</h1>
+          <h1 className="text-3xl font-extrabold">Daily Contest {TOURNAMENT_NUMBER}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             <span className="font-mono font-bold">{countdown}</span> remaining
           </p>
@@ -312,52 +312,82 @@ function LeaderboardOverview({
         </button>
       </div>
 
-      {/* Event stubs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Event sections — vertically stacked */}
+      <div className="space-y-6">
         {EVENT_CONFIGS.map((config) => {
-          const top3 = MOCK_LEADERBOARD.slice(0, 3);
+          const top5 = MOCK_LEADERBOARD.slice(0, 5);
           const selfEntry = MOCK_LEADERBOARD.find((e) => e.isSelf);
+          const isAo5 = config.tournamentSolveCount === 5;
 
           return (
-            <button
-              key={config.id}
-              onClick={() => onSelectEvent(config.id)}
-              className="rounded-lg bg-card border border-border p-4 hover:bg-muted transition-colors text-left space-y-3"
-            >
+            <div key={config.id} className="rounded-lg bg-card border border-border overflow-hidden">
               {/* Event header */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
                 <EventIcon event={config} size={24} />
-                <span className="font-bold flex-1">{config.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {config.tournamentSolveCount === 5 ? "Ao5" : "Mo3"} →
+                <span className="font-extrabold text-base flex-1">{config.name}</span>
+                <span className="text-xs font-bold text-muted-foreground">
+                  {isAo5 ? "Ao5" : "Mo3"}
                 </span>
               </div>
 
-              {/* Top 3 */}
-              <div className="space-y-1.5">
-                {top3.map((entry) => (
-                  <div key={entry.rank} className="flex items-center gap-2 text-sm">
-                    <span className="w-6 text-center">{rankDisplay(entry.rank)}</span>
-                    <span className={`flex-1 truncate ${entry.isSelf ? "text-primary font-semibold" : ""}`}>
-                      {entry.username}
-                    </span>
-                    {entry.country && (
-                      <span className="text-xs" suppressHydrationWarning>{countryCodeToFlag(entry.country)}</span>
-                    )}
-                    <span className="font-mono tabular-nums font-semibold text-xs">{entry.average}</span>
-                  </div>
-                ))}
-              </div>
+              {/* Mini table — top 5 */}
+              <table className="w-full text-sm">
+                <tbody>
+                  {top5.map((entry, rowIdx) => (
+                    <tr
+                      key={entry.rank}
+                      className={
+                        entry.isSelf
+                          ? "bg-primary/5"
+                          : rowIdx % 2 === 1
+                            ? "bg-muted/20"
+                            : ""
+                      }
+                    >
+                      <td className="px-4 py-2.5 w-10 text-center">
+                        {rankDisplay(entry.rank)}
+                      </td>
+                      <td className="py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-semibold ${entry.isSelf ? "text-primary" : ""}`}>
+                            {entry.username}
+                          </span>
+                          {entry.country && (
+                            <span className="text-sm" suppressHydrationWarning>{countryCodeToFlag(entry.country)}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono tabular-nums font-bold">
+                        {entry.average}
+                      </td>
+                    </tr>
+                  ))}
 
-              {/* Your placement (if not in top 3) */}
-              {selfEntry && selfEntry.rank > 3 && (
-                <div className="flex items-center gap-2 text-sm pt-1 border-t border-border/40">
-                  <span className="w-6 text-center text-xs font-bold text-muted-foreground">{selfEntry.rank}</span>
-                  <span className="flex-1 truncate text-primary font-semibold">You</span>
-                  <span className="font-mono tabular-nums font-semibold text-xs">{selfEntry.average}</span>
-                </div>
-              )}
-            </button>
+                  {/* Your placement if outside top 5 */}
+                  {selfEntry && selfEntry.rank > 5 && (
+                    <tr className="bg-primary/5 border-t border-border/40">
+                      <td className="px-4 py-2.5 w-10 text-center text-sm font-bold text-muted-foreground">
+                        {selfEntry.rank}
+                      </td>
+                      <td className="py-2.5">
+                        <span className="font-semibold text-primary">You</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono tabular-nums font-bold">
+                        {selfEntry.average}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              {/* View all button */}
+              <button
+                onClick={() => onSelectEvent(config.id)}
+                className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors border-t border-border"
+              >
+                View all results →
+              </button>
+            </div>
           );
         })}
       </div>
