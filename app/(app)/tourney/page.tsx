@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
-import { ChevronLeft, ChevronRight, Play, ArrowLeft } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Play, ArrowLeft } from "lucide-react";
 import { countryCodeToFlag } from "@/lib/countries";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getNextRollover } from "@/lib/tournament/date";
 
 type Tab = "compete" | "leaderboard";
@@ -133,18 +140,49 @@ const TOURNAMENT_NUMBER = 47;
 // --- Main Page ---
 
 export default function TourneyPage() {
-  const [tab, setTab] = useState<Tab>("compete");
-  // Contest number for leaderboard navigation. Current contest is the default.
-  const [viewingContest, setViewingContest] = useState(TOURNAMENT_NUMBER);
-  // null = overview, CubeEvent = drilling into that event's full table
-  const [selectedLeaderboardEvent, setSelectedLeaderboardEvent] = useState<CubeEvent | null>(null);
-  const [countdown, setCountdown] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
+  // Read state from URL params, with defaults.
+  const tab: Tab = searchParams.get("tab") === "leaderboard" ? "leaderboard" : "compete";
+  const viewingContest = Number(searchParams.get("contest")) || TOURNAMENT_NUMBER;
+  const selectedLeaderboardEvent = (searchParams.get("event") as CubeEvent) || null;
+  // Validate the event param is a real event.
+  const validEvent = selectedLeaderboardEvent && EVENT_MAP[selectedLeaderboardEvent]
+    ? selectedLeaderboardEvent
+    : null;
+
+  const [countdown, setCountdown] = useState("");
   const isCurrent = viewingContest === TOURNAMENT_NUMBER;
 
+  // Update URL params without full navigation.
+  const updateParams = useCallback((updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    router.replace(`/tourney?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  const setTab = (t: Tab) => {
+    if (t === "compete") {
+      updateParams({ tab: null, event: null, contest: null });
+    } else {
+      updateParams({ tab: "leaderboard" });
+    }
+  };
+
+  const setSelectedEvent = (event: CubeEvent | null) => {
+    updateParams({ event: event });
+  };
+
   const navigateContest = (direction: "prev" | "next") => {
-    setViewingContest((n) => n + (direction === "prev" ? -1 : 1));
-    setSelectedLeaderboardEvent(null);
+    const next = viewingContest + (direction === "prev" ? -1 : 1);
+    updateParams({ contest: String(next), event: null });
   };
 
   useEffect(() => {
@@ -177,7 +215,7 @@ export default function TourneyPage() {
               className={`px-4 py-2 text-sm font-bold transition-colors relative ${
                 tab === "compete" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
-              onClick={() => { setTab("compete"); setSelectedLeaderboardEvent(null); }}
+              onClick={() => setTab("compete")}
             >
               Compete
               {tab === "compete" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
@@ -206,20 +244,21 @@ export default function TourneyPage() {
                 ))}
               </div>
             </div>
-          ) : selectedLeaderboardEvent ? (
+          ) : validEvent ? (
             <EventLeaderboardDetail
-              event={selectedLeaderboardEvent}
+              event={validEvent}
               contestNumber={viewingContest}
               currentContestNumber={TOURNAMENT_NUMBER}
-              onBack={() => setSelectedLeaderboardEvent(null)}
+              onBack={() => setSelectedEvent(null)}
               navigateContest={navigateContest}
+              onChangeEvent={setSelectedEvent}
             />
           ) : (
             <LeaderboardOverview
               contestNumber={viewingContest}
               currentContestNumber={TOURNAMENT_NUMBER}
               navigateContest={navigateContest}
-              onSelectEvent={setSelectedLeaderboardEvent}
+              onSelectEvent={setSelectedEvent}
             />
           )}
         </div>
@@ -431,13 +470,14 @@ function LeaderboardOverview({
 // --- Leaderboard Tab: Full table for one event ---
 
 function EventLeaderboardDetail({
-  event, onBack, contestNumber, currentContestNumber, navigateContest,
+  event, onBack, contestNumber, currentContestNumber, navigateContest, onChangeEvent,
 }: {
   event: CubeEvent;
   onBack: () => void;
   contestNumber: number;
   currentContestNumber: number;
   navigateContest: (dir: "prev" | "next") => void;
+  onChangeEvent: (event: CubeEvent) => void;
 }) {
   const eventConfig = EVENT_MAP[event];
   const solveCount = eventConfig.tournamentSolveCount;
@@ -451,11 +491,26 @@ function EventLeaderboardDetail({
           <button onClick={onBack} className="p-1.5 rounded-md hover:bg-muted transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <EventIcon event={eventConfig} size={24} />
-          <span className="font-extrabold text-lg">{eventConfig.name}</span>
-          <span className="text-xs font-bold text-muted-foreground">
-            {isAo5 ? "Ao5" : "Mo3"}
-          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted transition-colors">
+              <EventIcon event={eventConfig} size={24} />
+              <span className="font-extrabold text-lg">{eventConfig.name}</span>
+              <span className="text-xs font-bold text-muted-foreground">{isAo5 ? "Ao5" : "Mo3"}</span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              {EVENT_CONFIGS.map((config) => (
+                <DropdownMenuItem
+                  key={config.id}
+                  onClick={() => onChangeEvent(config.id)}
+                  className={event === config.id ? "bg-accent" : ""}
+                >
+                  <EventIcon event={config} size={16} />
+                  <span>{config.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-2">
