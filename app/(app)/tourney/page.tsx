@@ -384,7 +384,6 @@ function LeaderboardOverview({
                     return (
                       <tr
                         key={entry.rank}
-                        className={rowIdx % 2 === 1 ? "bg-muted/40" : ""}
                       >
                         <td className="px-4 py-2.5 w-10 text-center">
                           {rankDisplay(entry.rank)}
@@ -547,7 +546,7 @@ function EventLeaderboardDetail({
               return (
                 <tr
                   key={entry.rank}
-                  className={rowIdx % 2 === 1 ? "bg-muted/40" : ""}
+                  className={rowIdx % 2 === 1 ? "bg-muted/60" : ""}
                 >
                   <td className="px-4 py-3 text-center">
                     {rankDisplay(entry.rank)}
