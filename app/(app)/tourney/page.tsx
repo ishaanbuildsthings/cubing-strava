@@ -276,11 +276,11 @@ export default function TourneyPage() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {contestDateStr}
-            {isCurrent && (
-              <> · <span className="font-mono font-bold">{countdown}</span> remaining</>
+            {isCurrent ? (
+              <><span className="font-mono font-bold">{countdown}</span> remaining</>
+            ) : (
+              <>{contestDateStr} · Ended</>
             )}
-            {!isCurrent && " · Ended"}
           </p>
 
           {/* Tabs */}
@@ -362,10 +362,19 @@ function EventCard({ config, entry }: { config: typeof EVENT_CONFIGS[number]; en
         </div>
       )}
 
-      {status === "in-progress" && (
-        <div className="flex items-center gap-2 text-yellow-500">
-          <Play className="w-3.5 h-3.5" />
-          <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
+      {status === "in-progress" && entry && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-yellow-500">
+            <Play className="w-3.5 h-3.5" />
+            <span className="text-xs font-semibold">Continue</span>
+          </div>
+          <p className="text-[11px] font-mono tabular-nums text-muted-foreground leading-relaxed">
+            {Array.from({ length: totalSolves }, (_, i) =>
+              i < entry.solves.length
+                ? formatSolveTime(entry.solves[i])
+                : "──"
+            ).join("  ")}
+          </p>
         </div>
       )}
 
