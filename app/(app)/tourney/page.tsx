@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
+import { UserAvatar } from "@/lib/components/user-avatar";
 import { ChevronDown, Play } from "lucide-react";
 import { countryCodeToFlag } from "@/lib/countries";
 import { getNextRollover } from "@/lib/tournament/date";
@@ -181,7 +182,14 @@ export default function TourneyPage() {
                 const solveCount = eventConfig.tournamentSolveCount;
                 const isAo5 = solveCount === 5;
 
-                // Identify best/worst indices for ao5 formatting.
+                function getBestSingle(solves: { timeMs: number; penalty: string | null }[]): string {
+                  const times = solves.map((s) =>
+                    s.penalty === "dnf" ? Infinity : s.penalty === "+2" ? s.timeMs + 2000 : s.timeMs
+                  );
+                  const best = Math.min(...times);
+                  return best === Infinity ? "DNF" : formatTime(best);
+                }
+
                 function getBestWorst(solves: { timeMs: number; penalty: string | null }[]) {
                   if (solves.length !== 5) return { bestIdx: -1, worstIdx: -1 };
                   const times = solves.map((s) =>
@@ -195,6 +203,13 @@ export default function TourneyPage() {
                   return { bestIdx, worstIdx };
                 }
 
+                const rankDisplay = (rank: number) => {
+                  if (rank === 1) return <span className="text-lg" suppressHydrationWarning>🥇</span>;
+                  if (rank === 2) return <span className="text-lg" suppressHydrationWarning>🥈</span>;
+                  if (rank === 3) return <span className="text-lg" suppressHydrationWarning>🥉</span>;
+                  return <span className="text-sm font-bold text-muted-foreground">{rank}</span>;
+                };
+
                 return (
                   <div className="rounded-lg bg-card border border-border overflow-x-auto">
                     <table className="w-full text-sm">
@@ -202,10 +217,11 @@ export default function TourneyPage() {
                         <tr className="border-b border-border text-xs font-bold text-muted-foreground uppercase tracking-wider">
                           <th className="px-3 py-2 text-left w-10">#</th>
                           <th className="px-3 py-2 text-left">Player</th>
+                          <th className="px-2 py-2 text-right w-16 border-l border-border">Single</th>
+                          <th className="px-2 py-2 text-right w-16 border-l border-border">{isAo5 ? "Avg" : "Mo3"}</th>
                           {Array.from({ length: solveCount }).map((_, i) => (
-                            <th key={i} className="px-2 py-2 text-right w-16">S{i + 1}</th>
+                            <th key={i} className="px-2 py-2 text-right w-16">{i + 1}</th>
                           ))}
-                          <th className="px-3 py-2 text-right w-16 border-l border-border">{isAo5 ? "Ao5" : "Mo3"}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -218,36 +234,44 @@ export default function TourneyPage() {
                                 entry.isSelf ? "bg-primary/5" : ""
                               }`}
                             >
-                              <td className={`px-3 py-3 font-bold ${
-                                entry.rank === 1 ? "text-yellow-500" :
-                                entry.rank === 2 ? "text-zinc-400" :
-                                entry.rank === 3 ? "text-amber-700" :
-                                "text-muted-foreground"
-                              }`}>
-                                {entry.rank}
+                              <td className="px-3 py-3 text-center">
+                                {rankDisplay(entry.rank)}
                               </td>
                               <td className="px-3 py-3">
                                 <div className="flex items-center gap-2 min-w-0">
+                                  <UserAvatar
+                                    user={{
+                                      username: entry.username,
+                                      firstName: entry.firstName,
+                                      lastName: entry.lastName,
+                                      profilePictureUrl: entry.profilePictureUrl,
+                                    }}
+                                    size="sm"
+                                    rounded="full"
+                                  />
                                   <span className={`font-semibold truncate ${entry.isSelf ? "text-primary" : ""}`}>
                                     {entry.username}
                                   </span>
                                   {entry.country && (
-                                    <span className="text-sm">{countryCodeToFlag(entry.country)}</span>
+                                    <span className="text-sm" suppressHydrationWarning>{countryCodeToFlag(entry.country)}</span>
                                   )}
                                 </div>
+                              </td>
+                              <td className="px-2 py-3 text-right font-mono tabular-nums font-bold border-l border-border">
+                                {getBestSingle(entry.solves)}
+                              </td>
+                              <td className="px-2 py-3 text-right font-mono tabular-nums font-bold border-l border-border">
+                                {entry.average}
                               </td>
                               {entry.solves.map((solve, i) => {
                                 const isBestOrWorst = isAo5 && (i === bestIdx || i === worstIdx);
                                 const display = formatSolveTime(solve);
                                 return (
-                                  <td key={i} className="px-2 py-3 text-right font-mono tabular-nums ">
+                                  <td key={i} className="px-2 py-3 text-right font-mono tabular-nums text-muted-foreground">
                                     {isBestOrWorst ? `(${display})` : display}
                                   </td>
                                 );
                               })}
-                              <td className="px-3 py-3 text-right font-mono tabular-nums font-bold border-l border-border">
-                                {entry.average}
-                              </td>
                             </tr>
                           );
                         })}
