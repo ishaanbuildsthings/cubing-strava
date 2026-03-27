@@ -1,4 +1,4 @@
-import type { Penalty } from "@/app/(app)/db";
+import type { Penalty } from "@/app/(app)/idb";
 import { CubeEvent } from "@/lib/cubing/events";
 
 // Which stats to track for practice sessions (IDB).

@@ -14,7 +14,7 @@ import {
   updateSolve,
   type Solve,
   type Penalty,
-} from "./db";
+} from "./idb";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
