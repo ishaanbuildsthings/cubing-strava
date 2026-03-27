@@ -347,7 +347,7 @@ export default function TourneyPage() {
 // Get the tournament format label for an event.
 function getFormatLabel(config: typeof EVENT_CONFIGS[number]): string {
   if (config.tournamentRankBy === "single") {
-    return `Best of ${config.tournamentSolveCount}`;
+    return `Bo${config.tournamentSolveCount}`;
   }
   return config.tournamentSolveCount === 5 ? "Ao5" : "Mo3";
 }
