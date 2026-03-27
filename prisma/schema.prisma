@@ -32,21 +32,12 @@ model Event {
   name String @unique
 
   solves            Solve[]
-  scrambles         Scramble[]
   personalBests     PersonalBest[]
   tournaments       Tournament[]
   scrambleSets      ScrambleSet[]
   tournamentEntries TournamentEntry[]
 }
 
-model Scramble {
-  id      String @id @default(cuid())
-  eventId String
-  moves   String
-
-  event  Event   @relation(fields: [eventId], references: [id])
-  solves Solve[]
-}
 
 enum PbType {
   single
