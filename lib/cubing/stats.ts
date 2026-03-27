@@ -1,5 +1,20 @@
 import type { Penalty } from "@/app/(app)/db";
-import type { StatType } from "@/lib/cubing/events";
+import { CubeEvent } from "@/lib/cubing/events";
+
+// Which stats to track for practice sessions (IDB).
+// This lives here (not in events.ts) because it's specific to the
+// client-side practice timer, not the general event configuration.
+export type StatType = "single" | "ao5" | "ao12" | "ao100" | "mo3";
+
+const STANDARD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12", "ao100"];
+const BLD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12"];
+
+const BLD_EVENTS = new Set([CubeEvent.THREE_BLD, CubeEvent.FOUR_BLD, CubeEvent.FIVE_BLD]);
+
+// Returns which stats to track for a given event in practice mode.
+export function getPracticeStats(event: CubeEvent): StatType[] {
+  return BLD_EVENTS.has(event) ? BLD_STATS : STANDARD_STATS;
+}
 
 // DNF is represented as Infinity so it naturally sorts to the end.
 const DNF = Infinity;

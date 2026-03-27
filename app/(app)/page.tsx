@@ -18,7 +18,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
-import { effectiveTime, type EventStats } from "@/lib/cubing/stats";
+import { effectiveTime, getPracticeStats, type EventStats } from "@/lib/cubing/stats";
 import {
   Popover,
   PopoverContent,
@@ -469,7 +469,7 @@ export default function TimerPage() {
             </div>
             {/* Stat rows */}
             <div className="space-y-1.5 px-3 pb-3">
-              {eventConfig.stats.includes("single") && (
+              {getPracticeStats(selectedEvent).includes("single") && (
                 <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Single</span>
                   <span className="font-mono tabular-nums text-sm font-bold text-right">
@@ -480,7 +480,7 @@ export default function TimerPage() {
                   </span>
                 </div>
               )}
-              {eventConfig.stats.includes("mo3") && (
+              {getPracticeStats(selectedEvent).includes("mo3") && (
                 <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Mo3</span>
                   <span className="font-mono tabular-nums text-sm font-bold text-right">
@@ -491,7 +491,7 @@ export default function TimerPage() {
                   </span>
                 </div>
               )}
-              {eventConfig.stats.includes("ao5") && (
+              {getPracticeStats(selectedEvent).includes("ao5") && (
                 <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Ao5</span>
                   <span className="font-mono tabular-nums text-sm font-bold text-right">
@@ -502,7 +502,7 @@ export default function TimerPage() {
                   </span>
                 </div>
               )}
-              {eventConfig.stats.includes("ao12") && (
+              {getPracticeStats(selectedEvent).includes("ao12") && (
                 <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Ao12</span>
                   <span className="font-mono tabular-nums text-sm font-bold text-right">
@@ -513,7 +513,7 @@ export default function TimerPage() {
                   </span>
                 </div>
               )}
-              {eventConfig.stats.includes("ao100") && (
+              {getPracticeStats(selectedEvent).includes("ao100") && (
                 <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
                   <span className="text-xs font-semibold text-muted-foreground">Ao100</span>
                   <span className="font-mono tabular-nums text-sm font-bold text-right">
