@@ -127,11 +127,15 @@ export default function TourneyPage() {
 
   const isCurrent = viewingContest === latestNumber;
 
-  const contestDateStr = activeContestData?.tournament?.datePST
-    ? new Date(activeContestData.tournament.datePST + "T12:00:00").toLocaleDateString("en-US", {
-        month: "short", day: "numeric", year: "numeric",
-      })
-    : "";
+  // Format the PST date string directly — no Date object needed.
+  const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const contestDateStr = (() => {
+    const raw = activeContestData?.tournament?.datePST;
+    if (!raw) return "";
+    const dateStr = typeof raw === "string" ? raw : new Date(raw).toISOString().split("T")[0];
+    const [y, m, d] = dateStr.split("-");
+    return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${parseInt(d, 10)}, ${y} PST`;
+  })();
 
   // Update URL params without full navigation.
   const updateParams = useCallback((updates: Record<string, string | null>) => {
