@@ -2,8 +2,11 @@
 // Used by practice (IDB), tournaments, races, etc.
 // No IDB or practice-specific logic belongs here.
 
-// DNF is represented as Infinity so it naturally sorts to the end.
-const DNF = Infinity;
+// DNF is represented as a sentinel value so it naturally sorts to the end.
+export const DNF_SENTINEL = 999_999_999;
+const DNF = DNF_SENTINEL;
+
+export type StatType = "single" | "ao5" | "ao12" | "ao100" | "mo3";
 
 export interface SolveForStats {
   timeMs: number;
@@ -114,4 +117,64 @@ export function findBestAverage(
     }
   }
   return best;
+}
+
+export interface EventStats {
+  event: string;
+  bestSingle: number | null;
+  bestAo5: number | null;
+  bestAo12: number | null;
+  bestAo100: number | null;
+  bestMo3: number | null;
+  sessionMean: number | null;
+  currentAo5: number | null;
+  currentAo12: number | null;
+  currentAo100: number | null;
+  currentMo3: number | null;
+}
+
+// Compute session mean, excluding DNFs.
+// Returns null if no solves, DNF_SENTINEL if all solves are DNF.
+function computeSessionMean(solves: SolveForStats[]): number | null {
+  if (solves.length === 0) return null;
+  const finiteTimes = solves.map(effectiveTime).filter((t) => t < DNF_SENTINEL);
+  if (finiteTimes.length === 0) return DNF_SENTINEL;
+  return Math.round(finiteTimes.reduce((a, b) => a + b, 0) / finiteTimes.length);
+}
+
+// Recompute all stats from an array of solves (newest first).
+// Only computes stats listed in the enabledStats array.
+export function recomputeStats(
+  event: string,
+  solves: SolveForStats[],
+  enabledStats: StatType[]
+): EventStats {
+  const has = (s: StatType) => enabledStats.includes(s);
+
+  const bestSingle = has("single") ? computeBestSingle(solves) : null;
+  const sessionMean = computeSessionMean(solves);
+
+  const currentAo5 = has("ao5") ? computeAo5(solves) : null;
+  const currentAo12 = has("ao12") ? computeAo12(solves) : null;
+  const currentAo100 = has("ao100") ? computeAo100(solves) : null;
+  const currentMo3 = has("mo3") ? computeMo3(solves) : null;
+
+  const bestAo5 = has("ao5") ? findBestAverage(solves, computeAo5) : null;
+  const bestAo12 = has("ao12") ? findBestAverage(solves, computeAo12) : null;
+  const bestAo100 = has("ao100") ? findBestAverage(solves, computeAo100) : null;
+  const bestMo3 = has("mo3") ? findBestAverage(solves, computeMo3) : null;
+
+  return {
+    event,
+    bestSingle,
+    bestAo5,
+    bestAo12,
+    bestAo100,
+    bestMo3,
+    sessionMean,
+    currentAo5,
+    currentAo12,
+    currentAo100,
+    currentMo3,
+  };
 }

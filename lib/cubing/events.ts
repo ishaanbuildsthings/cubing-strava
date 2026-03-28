@@ -33,6 +33,18 @@ export interface EventConfig {
   tournamentRankBy: "average" | "single";
 }
 
+import type { StatType } from "@/lib/cubing/stats";
+
+const STANDARD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12", "ao100"];
+const BLD_STATS: StatType[] = ["single", "mo3", "ao5", "ao12"];
+const BLD_EVENTS = new Set([CubeEvent.THREE_BLD, CubeEvent.FOUR_BLD, CubeEvent.FIVE_BLD]);
+
+// Returns which stats to track for a given event.
+// Used by both practice (IDB) and server-side post creation.
+export function getEnabledStats(event: CubeEvent): StatType[] {
+  return BLD_EVENTS.has(event) ? BLD_STATS : STANDARD_STATS;
+}
+
 export const EVENT_CONFIGS: EventConfig[] = [
   { id: CubeEvent.TWO, name: "2x2", iconClass: "event-222", icon3d: "/rubiks_2x2.svg", tournamentSolveCount: 5, tournamentRankBy: "average" },
   { id: CubeEvent.THREE, name: "3x3", iconClass: "event-333", icon3d: "/rubiks_3x3.svg", tournamentSolveCount: 5, tournamentRankBy: "average" },

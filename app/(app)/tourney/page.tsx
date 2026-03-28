@@ -15,11 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getNextRollover } from "@/lib/tournament/date";
 import { useContestStatus, useLeaderboard, useLeaderboardOverview } from "@/lib/hooks/useTournament";
-import { computeAo5, computeMo3, computeBestSingle, type SolveForStats } from "@/lib/cubing/stats";
+import { computeAo5, computeMo3, computeBestSingle, DNF_SENTINEL, type SolveForStats } from "@/lib/cubing/stats";
 
 type Tab = "compete" | "leaderboard";
-
-const DNF_RESULT = 999_999_999;
 const RESULTS_PER_PAGE = 25;
 
 // --- Helpers ---
@@ -50,7 +48,7 @@ function formatSolveTime(solve: { timeMs: number; penalty: string | null }): str
 }
 
 function formatResultTime(resultMs: number): string {
-  if (resultMs === DNF_RESULT) return "DNF";
+  if (resultMs === DNF_SENTINEL) return "DNF";
   return formatTime(resultMs);
 }
 

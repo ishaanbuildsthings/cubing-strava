@@ -5,10 +5,7 @@ export type ServiceContext = {
   viewer: ViewerContext;
 };
 
-// Sentinel value for DNF results. Stored as result on TournamentEntry
-// when all solves are completed but the result is DNF. Sorts after all
-// real times but before null (in-progress).
-export const DNF_RESULT = 999_999_999;
+import { DNF_SENTINEL } from "@/lib/cubing/stats";
 
 export function tournamentService(ctx: ServiceContext) {
   const { prisma, viewer } = ctx;

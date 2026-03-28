@@ -18,14 +18,14 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
-import { effectiveTime } from "@/lib/cubing/stats";
-import { getPracticeStats, type EventStats } from "./idb";
+import { effectiveTime, DNF_SENTINEL, type EventStats } from "@/lib/cubing/stats";
+import { getPracticeStats } from "./idb";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { X, Copy, Check, Trash2, ChevronDown, Settings, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { X, Copy, Check, Trash2, ChevronDown, Settings, PanelRightClose, PanelRightOpen, FilePen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useSettings } from "@/lib/context/settings";
+import { DraftPostModal } from "@/lib/components/draft-post-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +51,7 @@ import {
 type TimerState = "idle" | "inspecting" | "holding" | "ready" | "running";
 
 function formatTime(ms: number): string {
-  if (ms === Infinity) return "DNF";
+  if (ms >= DNF_SENTINEL) return "DNF";
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -84,6 +85,7 @@ export default function TimerPage() {
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [postOpen, setPostOpen] = useState(false);
   // Whether there are more solves in IDB beyond what's currently loaded.
   // False once a batch returns fewer results than requested.
   const [hasMore, setHasMore] = useState(true);
@@ -378,7 +380,8 @@ export default function TimerPage() {
                 >
                   <option value={0}>None</option>
                   <option value={300}>0.3s</option>
-                  <option value={500}>0.5s</option>
+                  <option value={550}>0.55s</option>
+                  <option value={1000}>1s</option>
                 </select>
               </div>
 
@@ -525,6 +528,13 @@ export default function TimerPage() {
                   </span>
                 </div>
               )}
+              <div className="grid grid-cols-[1fr_3.5rem_3.5rem] gap-x-3 items-center">
+                <span className="text-xs font-semibold text-muted-foreground">Mean</span>
+                <span className="font-mono tabular-nums text-sm font-bold text-right">
+                  {stats.sessionMean !== null ? formatTime(stats.sessionMean) : "-"}
+                </span>
+                <span />
+              </div>
             </div>
           </div>
         )}
@@ -623,7 +633,25 @@ export default function TimerPage() {
             })}
           </div>
         </ul>
-        <div className="p-2 border-t border-border flex justify-center">
+        {stats && (
+          <DraftPostModal
+            open={postOpen}
+            onOpenChange={setPostOpen}
+            eventConfig={eventConfig}
+            stats={stats}
+            solves={solves}
+          />
+        )}
+        <div className="p-2 border-t border-border flex flex-col items-center gap-1">
+          {stats && (
+            <button
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-green-500 py-1 px-3 rounded-md hover:bg-green-500/10 transition-colors"
+              onClick={() => setPostOpen(true)}
+            >
+              <FilePen className="w-3.5 h-3.5" />
+              Post
+            </button>
+          )}
           {confirmClear ? (
             <div className="flex items-center gap-2">
               <button
