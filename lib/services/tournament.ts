@@ -31,7 +31,7 @@ export function tournamentService(ctx: ServiceContext) {
       // Get all of the viewer's entries for this tournament.
       const myEntries = await prisma.tournamentEntry.findMany({
         where: { tournamentId, userId: viewer.userId },
-        include: { scrambleSet: true },
+        include: { scrambleSet: true, event: true },
       });
 
       // Get the viewer's solves for all scramble sets they've entered.
@@ -95,6 +95,7 @@ export function tournamentService(ctx: ServiceContext) {
         const solves = solvesByScrambleSet.get(entry.scrambleSetId) ?? [];
         return {
           eventId: entry.eventId,
+          eventName: entry.event.name,
           entryId: entry.id,
           scrambleSetId: entry.scrambleSetId,
           scrambles: entry.scrambleSet.scrambles as string[],
@@ -111,10 +112,20 @@ export function tournamentService(ctx: ServiceContext) {
       });
 
       // Competitor counts for events the viewer hasn't entered.
+      // Look up event names for unentered events.
+      const unenteredEventIds = totalCounts
+        .filter((c) => !enteredEventIds.includes(c.eventId))
+        .map((c) => c.eventId);
+      const unenteredEventRecords = unenteredEventIds.length > 0
+        ? await prisma.event.findMany({ where: { id: { in: unenteredEventIds } } })
+        : [];
+      const eventNameMap = new Map(unenteredEventRecords.map((e) => [e.id, e.name]));
+
       const unenteredEvents = totalCounts
         .filter((c) => !enteredEventIds.includes(c.eventId))
         .map((c) => ({
           eventId: c.eventId,
+          eventName: eventNameMap.get(c.eventId) ?? c.eventId,
           totalCompetitors: c._count,
         }));
 
@@ -131,6 +142,11 @@ export function tournamentService(ctx: ServiceContext) {
         where: { tournamentId },
         _count: true,
       });
+
+      // Look up event names for all groups.
+      const eventIds = allEventGroups.map((g) => g.eventId);
+      const events = await prisma.event.findMany({ where: { id: { in: eventIds } } });
+      const overviewEventNameMap = new Map(events.map((e) => [e.id, e.name]));
 
       const overviewByEvent = await Promise.all(
         allEventGroups.map(async (group) => {
@@ -209,6 +225,7 @@ export function tournamentService(ctx: ServiceContext) {
 
           return {
             eventId: group.eventId,
+            eventName: overviewEventNameMap.get(group.eventId) ?? group.eventId,
             totalCompetitors: group._count,
             top3: top3.map((entry, i) => {
               const entrySolves = solvesMap.get(entry.userId) ?? [];

@@ -307,6 +307,7 @@ type ContestStatusData = {
   events: {
     enteredEvents: {
       eventId: string;
+      eventName: string;
       entryId: string;
       scrambleSetId: string;
       scrambles: string[];
@@ -317,6 +318,7 @@ type ContestStatusData = {
     }[];
     unenteredEvents: {
       eventId: string;
+      eventName: string;
       totalCompetitors: number;
     }[];
   };
@@ -334,10 +336,10 @@ function CompeteTab({
   }
 
   const enteredMap = new Map(
-    (contestData?.events.enteredEvents ?? []).map((e) => [e.eventId, e])
+    (contestData?.events.enteredEvents ?? []).map((e) => [e.eventName, e])
   );
   const unenteredMap = new Map(
-    (contestData?.events.unenteredEvents ?? []).map((e) => [e.eventId, e])
+    (contestData?.events.unenteredEvents ?? []).map((e) => [e.eventName, e])
   );
 
   return (
@@ -475,7 +477,7 @@ function LeaderboardOverview({
   }
 
   const eventDataMap = new Map(
-    overviewQuery.data.events.map((e) => [e.eventId, e])
+    overviewQuery.data.events.map((e) => [e.eventName, e])
   );
 
   return (
