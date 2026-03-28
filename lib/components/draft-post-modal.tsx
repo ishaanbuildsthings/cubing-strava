@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { type EventStats } from "@/lib/cubing/stats";
 import { type EventConfig } from "@/lib/cubing/events";
+import { type Solve } from "@/app/(app)/db";
+import { useTRPC } from "@/lib/trpc/client";
+import { useMutation } from "@tanstack/react-query";
 
 function formatTime(ms: number): string {
   if (ms === Infinity) return "DNF";
@@ -28,7 +31,7 @@ interface DraftPostModalProps {
   onOpenChange: (open: boolean) => void;
   eventConfig: EventConfig;
   stats: EventStats;
-  numSolves: number;
+  solves: Solve[];
 }
 
 export function DraftPostModal({
@@ -36,14 +39,30 @@ export function DraftPostModal({
   onOpenChange,
   eventConfig,
   stats,
-  numSolves,
+  solves,
 }: DraftPostModalProps) {
   const [caption, setCaption] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const trpc = useTRPC();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const createPost = useMutation(
+    trpc.post.createPracticeSessionPost.mutationOptions()
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire up TRPC mutation
+    await createPost.mutateAsync({
+      event: eventConfig.id,
+      solves: solves.map((s) => ({
+        timeMs: s.timeMs,
+        penalty: s.penalty ?? undefined,
+        scramble: s.scramble,
+      })),
+      caption,
+      youtubeUrl: youtubeUrl || undefined,
+    });
+    setCaption("");
+    setYoutubeUrl("");
     onOpenChange(false);
   };
 
@@ -60,7 +79,7 @@ export function DraftPostModal({
         <DialogHeader>
           <DialogTitle>Share practice session ⏱</DialogTitle>
           <DialogDescription>
-            {eventConfig.name} · {numSolves} solve{numSolves !== 1 ? "s" : ""}
+            {eventConfig.name} · {solves.length} solve{solves.length !== 1 ? "s" : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -107,12 +126,16 @@ export function DraftPostModal({
               className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
+          {createPost.error && (
+            <p className="text-sm text-red-500">{createPost.error.message}</p>
+          )}
           <div className="flex justify-end pt-1">
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              disabled={createPost.isPending}
+              className="px-4 py-2 text-sm font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              Post
+              {createPost.isPending ? "Posting..." : "Post"}
             </button>
           </div>
         </form>

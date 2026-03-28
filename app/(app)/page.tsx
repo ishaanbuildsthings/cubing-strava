@@ -631,7 +631,7 @@ export default function TimerPage() {
             onOpenChange={setPostOpen}
             eventConfig={eventConfig}
             stats={stats}
-            numSolves={totalSolveCount}
+            solves={solves}
           />
         )}
         <div className="p-2 border-t border-border flex flex-col items-center gap-1">
