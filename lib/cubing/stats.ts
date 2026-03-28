@@ -13,7 +13,7 @@ interface SolveForStats {
 // +2 adds 2000ms. DNF returns Infinity.
 export function effectiveTime(solve: SolveForStats): number {
   if (solve.penalty === "dnf") return DNF;
-  if (solve.penalty === "+2") return solve.timeMs + 2000;
+  if (solve.penalty === "plus_two") return solve.timeMs + 2000;
   return solve.timeMs;
 }
 
