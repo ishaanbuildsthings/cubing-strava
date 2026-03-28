@@ -25,6 +25,7 @@ model User {
   followers         Follow[]          @relation("followee")
   following         Follow[]          @relation("follower")
   tournamentEntries TournamentEntry[]
+  practicePosts     PracticePost[]
 }
 
 model Event {
@@ -128,7 +129,7 @@ enum PostType {
 
 model PracticePost {
   id            String  @id @default(cuid())
-  postId        String  @unique
+  userId        String
   eventId       String
   caption       String  @default("")
   bestSingle    Int?
@@ -146,7 +147,8 @@ model PracticePost {
   createdAt     DateTime @default(now())
   lastUpdatedAt DateTime @updatedAt
 
-  event      Event       @relation(fields: [eventId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  event       Event       @relation(fields: [eventId], references: [id])
   scrambleSet ScrambleSet @relation(fields: [scrambleSetId], references: [id])
 }
 

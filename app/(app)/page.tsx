@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { X, Copy, Check, Trash2, ChevronDown, Settings, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { X, Copy, Check, Trash2, ChevronDown, Settings, PanelRightClose, PanelRightOpen, FilePen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useSettings } from "@/lib/context/settings";
+import { DraftPostModal } from "@/lib/components/draft-post-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +84,7 @@ export default function TimerPage() {
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [postOpen, setPostOpen] = useState(false);
   // Whether there are more solves in IDB beyond what's currently loaded.
   // False once a batch returns fewer results than requested.
   const [hasMore, setHasMore] = useState(true);
@@ -623,7 +625,25 @@ export default function TimerPage() {
             })}
           </div>
         </ul>
-        <div className="p-2 border-t border-border flex justify-center">
+        {stats && (
+          <DraftPostModal
+            open={postOpen}
+            onOpenChange={setPostOpen}
+            eventConfig={eventConfig}
+            stats={stats}
+            numSolves={totalSolveCount}
+          />
+        )}
+        <div className="p-2 border-t border-border flex flex-col items-center gap-1">
+          {stats && (
+            <button
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-green-500 py-1 px-3 rounded-md hover:bg-green-500/10 transition-colors"
+              onClick={() => setPostOpen(true)}
+            >
+              <FilePen className="w-3.5 h-3.5" />
+              Post
+            </button>
+          )}
           {confirmClear ? (
             <div className="flex items-center gap-2">
               <button
