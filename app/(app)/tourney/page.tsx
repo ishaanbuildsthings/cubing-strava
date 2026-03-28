@@ -66,15 +66,14 @@ function getStatColumnLabel(config: typeof EVENT_CONFIGS[number]): string {
 // Compute display values (single, average/mean) from solves based on event config.
 // Uses the shared compute functions so display is always correct.
 function computeDisplayStats(solves: SolveForStats[], config: typeof EVENT_CONFIGS[number]) {
-  const stats = solves as SolveForStats[];
-  const single = computeBestSingle(stats);
+  const single = computeBestSingle(solves);
   const singleStr = single === null ? "—" : formatTime(single);
 
   let avg: number | null = null;
   if (config.tournamentSolveCount === 5) {
-    avg = computeAo5(stats);
+    avg = computeAo5(solves);
   } else if (config.tournamentSolveCount === 3) {
-    avg = computeMo3(stats);
+    avg = computeMo3(solves);
   }
   const avgStr = avg === null ? "—" : formatTime(avg);
 
