@@ -666,6 +666,11 @@ function EventLeaderboardDetail({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          {leaderboardQuery.data && (
+            <span className="text-sm text-muted-foreground">
+              {leaderboardQuery.data.total} competitors
+            </span>
+          )}
         </div>
       </div>
 
