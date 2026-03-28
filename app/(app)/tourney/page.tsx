@@ -431,42 +431,38 @@ function EventCard({
   return (
     <button className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-muted/60 transition-colors text-left border-b border-border/40 last:border-0">
       {/* Event icon + name */}
-      <div className="flex items-center gap-3 w-32 shrink-0">
+      <div className="flex items-center gap-3 w-24 shrink-0">
         <EventIcon event={config} size={28} />
         <span className="font-extrabold">{config.name}</span>
       </div>
 
-      {/* Result + format */}
-      <div className="w-36 shrink-0">
-        {status === "not-started" && (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Play className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold">Start</span>
-          </div>
-        )}
-        {status === "in-progress" && (
-          <div className="flex items-center gap-2 text-yellow-500">
-            <Play className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
-          </div>
-        )}
+      {/* Result + format + solve times OR Start/Continue button */}
+      <div className="flex-1 min-w-0">
         {status === "completed" && displayStats && (
-          <div className="flex items-center gap-2">
-            <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-mono tabular-nums font-extrabold text-base">{displayStats.rankingResult}</span>
             <span className="text-xs font-bold text-muted-foreground">{formatLabel}</span>
+            <span className="font-mono tabular-nums text-sm text-muted-foreground">
+              {config.tournamentSolveCount === 5 && config.tournamentRankBy === "average"
+                ? formatAo5Times(enteredEvent!.solves)
+                : enteredEvent!.solves.map(formatSolveTime).join("  ")}
+            </span>
+          </div>
+        )}
+        {status === "in-progress" && enteredEvent && (
+          <div className="flex items-center gap-3">
+            <span className="font-mono tabular-nums text-sm text-muted-foreground">
+              {enteredEvent.solves.map(formatSolveTime).join("  ")}
+            </span>
           </div>
         )}
       </div>
 
-      {/* Rank */}
-      <div className="w-16 shrink-0 text-center">
+      {/* Rank + competitors */}
+      <div className="flex items-center gap-3 shrink-0">
         {status === "completed" && enteredEvent?.rank && (
           <span className="text-xs font-bold text-primary">#{enteredEvent.rank}</span>
         )}
-      </div>
-
-      {/* Competitors */}
-      <div className="w-24 shrink-0">
         {totalCompetitors > 0 && (
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -475,16 +471,19 @@ function EventCard({
         )}
       </div>
 
-      {/* Solve times */}
-      <div className="flex-1 text-right">
-        {enteredEvent && enteredEvent.solves.length > 0 && (
-          <p className="text-[11px] font-mono tabular-nums text-muted-foreground">
-            {config.tournamentSolveCount === 5 && config.tournamentRankBy === "average"
-              ? formatAo5Times(enteredEvent.solves)
-              : enteredEvent.solves.map(formatSolveTime).join("  ")}
-          </p>
-        )}
-      </div>
+      {/* Start / Continue button (right-aligned for not-started and in-progress) */}
+      {status === "not-started" && (
+        <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+          <Play className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold">Start</span>
+        </div>
+      )}
+      {status === "in-progress" && (
+        <div className="flex items-center gap-2 text-yellow-500 shrink-0">
+          <Play className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
+        </div>
+      )}
     </button>
   );
 }
