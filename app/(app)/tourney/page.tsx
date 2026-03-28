@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getNextRollover } from "@/lib/tournament/date";
 import { useContestStatus, useLeaderboard, useLeaderboardOverview } from "@/lib/hooks/useTournament";
-import { computeAo5, computeMo3, computeBestSingle, DNF_SENTINEL, type SolveForStats } from "@/lib/cubing/stats";
+import { computeAo5, computeMo3, computeBestSingle, effectiveTime, DNF_SENTINEL, type SolveForStats } from "@/lib/cubing/stats";
 import { formatTime, formatSolveTime } from "@/lib/cubing/format";
 
 type Tab = "compete" | "leaderboard";
@@ -32,19 +32,18 @@ function formatCountdown(ms: number): string {
 }
 
 
+function toSolveForStats(s: { timeMs: number; penalty: string | null }): SolveForStats {
+  return { timeMs: s.timeMs, penalty: s.penalty as SolveForStats["penalty"] };
+}
+
 function getBestSingle(solves: { timeMs: number; penalty: string | null }[]): string {
-  const times = solves.map((s) =>
-    s.penalty === "dnf" ? Infinity : s.penalty === "plus_two" ? s.timeMs + 2000 : s.timeMs
-  );
-  const best = Math.min(...times);
-  return best === Infinity ? "DNF" : formatTime(best);
+  const best = computeBestSingle(solves.map(toSolveForStats));
+  return best === null ? "—" : formatTime(best);
 }
 
 function getBestWorst(solves: { timeMs: number; penalty: string | null }[]) {
   if (solves.length !== 5) return { bestIdx: -1, worstIdx: -1 };
-  const times = solves.map((s) =>
-    s.penalty === "dnf" ? Infinity : s.penalty === "plus_two" ? s.timeMs + 2000 : s.timeMs
-  );
+  const times = solves.map((s) => effectiveTime(toSolveForStats(s)));
   let bestIdx = 0, worstIdx = 0;
   times.forEach((t, i) => {
     if (t < times[bestIdx]) bestIdx = i;
@@ -96,7 +95,7 @@ function getStatColumnLabel(config: typeof EVENT_CONFIGS[number]): string {
 function computeDisplayStats(solves: { timeMs: number; penalty: string | null }[], config: typeof EVENT_CONFIGS[number]) {
   const stats = solves as SolveForStats[];
   const single = computeBestSingle(stats);
-  const singleStr = single === null ? "—" : single === Infinity ? "DNF" : formatTime(single);
+  const singleStr = single === null ? "—" : formatTime(single);
 
   let avg: number | null = null;
   if (config.tournamentSolveCount === 5) {
@@ -104,7 +103,7 @@ function computeDisplayStats(solves: { timeMs: number; penalty: string | null }[
   } else if (config.tournamentSolveCount === 3) {
     avg = computeMo3(stats);
   }
-  const avgStr = avg === null ? "—" : avg === Infinity ? "DNF" : formatTime(avg);
+  const avgStr = avg === null ? "—" : formatTime(avg);
 
   // The ranking result — what determines your position on the leaderboard.
   // For BLD events ranked by single, this is the best single.

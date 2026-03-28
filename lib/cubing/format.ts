@@ -4,9 +4,9 @@
 import { DNF_SENTINEL } from "@/lib/cubing/stats";
 
 // Format milliseconds to a human-readable time string.
-// Examples: 9230 → "9.23", 62100 → "1:02.10", Infinity/DNF_SENTINEL → "DNF"
+// Examples: 9230 → "9.23", 62100 → "1:02.10", DNF_SENTINEL → "DNF"
 export function formatTime(ms: number): string {
-  if (ms >= DNF_SENTINEL || ms === Infinity) return "DNF";
+  if (ms >= DNF_SENTINEL) return "DNF";
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;

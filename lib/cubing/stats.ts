@@ -14,7 +14,7 @@ export interface SolveForStats {
 }
 
 // Returns the effective solve time accounting for penalties.
-// plus_two adds 2000ms. DNF returns Infinity.
+// plus_two adds 2000ms. DNF returns DNF_SENTINEL.
 export function effectiveTime(solve: SolveForStats): number {
   if (solve.penalty === "dnf") return DNF;
   if (solve.penalty === "plus_two") return solve.timeMs + 2000;
