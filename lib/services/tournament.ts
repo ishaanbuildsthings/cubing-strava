@@ -133,25 +133,26 @@ export function tournamentService(ctx: ServiceContext) {
             },
           });
 
-          // Get solves for top 3.
-          const top3ScrambleSetIds = top3.map((e) => e.scrambleSetId);
+          // Get solves for top 3. All entries for the same event share one
+          // scramble set, so we only need the single scrambleSetId + the user IDs.
+          const scrambleSetId = top3[0]?.scrambleSetId;
           const top3UserIds = top3.map((e) => e.userId);
-          const top3Solves = top3ScrambleSetIds.length > 0
+          const top3Solves = scrambleSetId
             ? await prisma.solve.findMany({
                 where: {
-                  scrambleSetId: { in: top3ScrambleSetIds },
+                  scrambleSetId,
                   userId: { in: top3UserIds },
                 },
                 orderBy: { scrambleSetIndex: "asc" },
               })
             : [];
 
+          // Group solves by userId (scrambleSetId is the same for all).
           const solvesMap = new Map<string, typeof top3Solves>();
           for (const solve of top3Solves) {
-            const key = `${solve.scrambleSetId}:${solve.userId}`;
-            const existing = solvesMap.get(key) ?? [];
+            const existing = solvesMap.get(solve.userId) ?? [];
             existing.push(solve);
-            solvesMap.set(key, existing);
+            solvesMap.set(solve.userId, existing);
           }
 
           // Viewer's entry for this event.
@@ -183,8 +184,7 @@ export function tournamentService(ctx: ServiceContext) {
             eventId: group.eventId,
             totalCompetitors: group._count,
             top3: top3.map((entry, i) => {
-              const key = `${entry.scrambleSetId}:${entry.userId}`;
-              const entrySolves = solvesMap.get(key) ?? [];
+              const entrySolves = solvesMap.get(entry.userId) ?? [];
               return {
                 rank: i + 1,
                 user: entry.user,
