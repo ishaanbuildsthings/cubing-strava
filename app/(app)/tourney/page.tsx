@@ -499,7 +499,12 @@ function LeaderboardOverview({
               {/* Event header */}
               <div className="flex items-center gap-3 mb-2">
                 <EventIcon event={config} size={24} />
-                <span className="font-extrabold text-base flex-1">{config.name}</span>
+                <span className="font-extrabold text-base">{config.name}</span>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  {eventData.totalCompetitors} competing
+                </span>
+                <span className="flex-1" />
                 <button
                   onClick={() => onSelectEvent(config.id)}
                   className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
