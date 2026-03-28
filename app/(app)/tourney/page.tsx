@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getNextRollover, getTournamentDate } from "@/lib/tournament/date";
+import { getNextRollover } from "@/lib/tournament/date";
 import { useContestStatus, useLeaderboard } from "@/lib/hooks/useTournament";
 
 type Tab = "compete" | "leaderboard";
@@ -285,15 +285,13 @@ export default function TourneyPage() {
   const [countdown, setCountdown] = useState("");
   const isCurrent = viewingContest === currentTournamentNumber;
 
-  // Compute the date for the viewed contest.
-  // Current contest uses today's tournament date. Past contests offset by the difference.
-  const todayTournamentDate = getTournamentDate();
-  const dayOffset = TOURNAMENT_NUMBER - viewingContest;
-  const contestDate = new Date(todayTournamentDate + "T12:00:00Z");
-  contestDate.setUTCDate(contestDate.getUTCDate() - dayOffset);
-  const contestDateStr = contestDate.toLocaleDateString("en-US", {
-    month: "short", day: "numeric", year: "numeric",
-  });
+  // Contest date comes from the API (datePST on the tournament).
+  // Falls back to empty string when data isn't loaded yet.
+  const contestDateStr = contestStatusQuery.data?.tournament?.datePST
+    ? new Date(contestStatusQuery.data.tournament.datePST + "T12:00:00").toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+      })
+    : "";
 
   // Update URL params without full navigation.
   const updateParams = useCallback((updates: Record<string, string | null>) => {
