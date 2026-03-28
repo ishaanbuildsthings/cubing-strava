@@ -15,7 +15,7 @@ export interface TimerSettings {
 }
 
 export const DEFAULT_TIMER_SETTINGS: TimerSettings = {
-  holdDelayMs: 300,
+  holdDelayMs: 550,
   useInspection: false,
   inspectionDurationMs: 15000,
   showTimerWhileRunning: true,
