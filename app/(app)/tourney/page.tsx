@@ -438,7 +438,15 @@ function EventCard({
           <span className="font-extrabold">{config.name}</span>
           <span className="font-extrabold">{formatLabel}</span>
           {status === "completed" && displayStats && (
-            <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
+            <>
+              <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
+              {enteredEvent?.rank && (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal">
+                  (<span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                  rank {enteredEvent.rank}/{totalCompetitors})
+                </span>
+              )}
+            </>
           )}
         </div>
         {/* Detail line: solve times + placeholders */}
