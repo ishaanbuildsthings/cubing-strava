@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, authedProcedure } from "../init";
 import { tournamentService } from "@/lib/services/tournament";
 
@@ -13,9 +14,8 @@ export const tournamentRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const service = tournamentService(ctx);
       const tournament = await service.getTournament(input.number);
-
       if (!tournament) {
-        return { tournament: null, events: [] };
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tournament not found" });
       }
 
       const events = await service.getContestStatus(tournament.id);
@@ -44,14 +44,8 @@ export const tournamentRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const service = tournamentService(ctx);
       const tournament = await service.getTournament(input.tournamentNumber);
-
       if (!tournament) {
-        return {
-          tournament: null,
-          total: 0,
-          entries: [],
-          viewerEntry: null,
-        };
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tournament not found" });
       }
 
       const leaderboard = await service.getLeaderboard(
