@@ -36,11 +36,6 @@ function toSolveForStats(s: { timeMs: number; penalty: string | null }): SolveFo
   return { timeMs: s.timeMs, penalty: s.penalty as SolveForStats["penalty"] };
 }
 
-function getBestSingle(solves: { timeMs: number; penalty: string | null }[]): string {
-  const best = computeBestSingle(solves.map(toSolveForStats));
-  return best === null ? "—" : formatTime(best);
-}
-
 function getBestWorst(solves: { timeMs: number; penalty: string | null }[]) {
   if (solves.length !== 5) return { bestIdx: -1, worstIdx: -1 };
   const times = solves.map((s) => effectiveTime(toSolveForStats(s)));
