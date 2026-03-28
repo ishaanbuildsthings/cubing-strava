@@ -441,18 +441,17 @@ function EventCard({
         <span className="flex-1" />
         {/* Right side */}
         {status === "completed" && enteredEvent?.rank && (
-          <span className="flex items-center gap-2 text-sm font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span>#{enteredEvent.rank} / {totalCompetitors}</span>
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold">#{enteredEvent.rank} / {totalCompetitors}</span>
+            <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-bold text-sm transition-colors">
+              View
+            </div>
+          </div>
         )}
         {status === "not-started" && (
           <div className="flex items-center gap-3">
             {totalCompetitors > 0 && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                {totalCompetitors}
-              </span>
+              <span className="text-xs text-muted-foreground">{totalCompetitors} competing</span>
             )}
             <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors shadow-sm">
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -463,10 +462,7 @@ function EventCard({
         {status === "in-progress" && (
           <div className="flex items-center gap-3">
             {totalCompetitors > 0 && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                {totalCompetitors}
-              </span>
+              <span className="text-xs text-muted-foreground">{totalCompetitors} competing</span>
             )}
             <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-sm transition-colors shadow-sm">
               <Play className="w-3.5 h-3.5 fill-current" />
