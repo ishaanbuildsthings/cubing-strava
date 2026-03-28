@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getNextRollover } from "@/lib/tournament/date";
 import { useContestStatus, useLeaderboard, useLeaderboardOverview } from "@/lib/hooks/useTournament";
+import { computeAo5, computeMo3, computeBestSingle, type SolveForStats } from "@/lib/cubing/stats";
 
 type Tab = "compete" | "leaderboard";
 
@@ -103,6 +104,36 @@ function getFormatLabel(config: typeof EVENT_CONFIGS[number]): string {
 // Get the stat column label for the leaderboard table.
 function getStatColumnLabel(config: typeof EVENT_CONFIGS[number]): string {
   return config.tournamentSolveCount === 5 ? "Ao5" : "Mo3";
+}
+
+// Map DB penalty enum to SolveForStats penalty type.
+function mapPenalty(p: string | null): "+2" | "dnf" | null {
+  if (p === "plus_two") return "+2";
+  if (p === "dnf") return "dnf";
+  return null;
+}
+
+// Convert API solve data to SolveForStats for compute functions.
+function toSolveForStats(solves: { timeMs: number; penalty: string | null }[]): SolveForStats[] {
+  return solves.map((s) => ({ timeMs: s.timeMs, penalty: mapPenalty(s.penalty) }));
+}
+
+// Compute display values (single, average/mean) from solves based on event config.
+// Uses the shared compute functions so display is always correct.
+function computeDisplayStats(solves: { timeMs: number; penalty: string | null }[], config: typeof EVENT_CONFIGS[number]) {
+  const mapped = toSolveForStats(solves);
+  const single = computeBestSingle(mapped);
+  const singleStr = single === null ? "—" : single === Infinity ? "DNF" : formatTime(single);
+
+  let avg: number | null = null;
+  if (config.tournamentSolveCount === 5) {
+    avg = computeAo5(mapped);
+  } else if (config.tournamentSolveCount === 3) {
+    avg = computeMo3(mapped);
+  }
+  const avgStr = avg === null ? "—" : avg === Infinity ? "DNF" : formatTime(avg);
+
+  return { singleStr, avgStr };
 }
 
 // --- Loading Spinner ---
@@ -296,6 +327,7 @@ export default function TourneyPage() {
           ) : (
             <LeaderboardOverview
               tournamentNumber={viewingContest}
+              isCurrent={isCurrent}
               onSelectEvent={setSelectedEvent}
             />
           )}
@@ -393,10 +425,10 @@ function EventCard({
 
   const completedSolves = enteredEvent?.solves.length ?? 0;
 
-  // Compute display result for completed entries.
-  const resultDisplay = enteredEvent?.result !== null && enteredEvent?.result !== undefined
-    ? formatResultTime(enteredEvent.result)
-    : null;
+  // Compute display result from solves using shared compute functions.
+  const { avgStr: resultDisplay } = enteredEvent
+    ? computeDisplayStats(enteredEvent.solves, config)
+    : { avgStr: null };
 
   return (
     <button className="rounded-lg bg-card border border-border p-4 hover:bg-muted transition-colors text-left space-y-3">
@@ -462,9 +494,11 @@ function EventCard({
 
 function LeaderboardOverview({
   tournamentNumber,
+  isCurrent,
   onSelectEvent,
 }: {
   tournamentNumber: number | undefined;
+  isCurrent: boolean;
   onSelectEvent: (event: CubeEvent) => void;
 }) {
   const overviewQuery = useLeaderboardOverview(tournamentNumber);
@@ -501,8 +535,8 @@ function LeaderboardOverview({
                 <EventIcon event={config} size={24} />
                 <span className="font-extrabold text-base">{config.name}</span>
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  {eventData.totalCompetitors} competing
+                  {isCurrent && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
+                  {eventData.totalCompetitors} {isCurrent ? "competing" : "competed"}
                 </span>
                 <span className="flex-1" />
                 <button
@@ -532,9 +566,7 @@ function LeaderboardOverview({
                     {eventData.viewerEntry && (() => {
                       const viewer = eventData.viewerEntry;
                       const { bestIdx, worstIdx } = getBestWorst(viewer.solves);
-                      const resultStr = viewer.result !== null
-                        ? formatResultTime(viewer.result)
-                        : "—";
+                      const { singleStr, avgStr } = computeDisplayStats(viewer.solves, config);
                       return (
                         <tr className="bg-orange-500/[0.03] border-l-2 border-l-orange-500/40 border-b border-b-orange-500/10">
                           <td className="px-4 py-2.5 w-10 text-center text-sm font-bold text-orange-400">
@@ -544,10 +576,10 @@ function LeaderboardOverview({
                             <span className="font-semibold text-orange-400">You</span>
                           </td>
                           <td className="pl-8 pr-4 py-2.5 text-right font-mono tabular-nums font-bold">
-                            {viewer.solves.length > 0 ? getBestSingle(viewer.solves) : "—"}
+                            {singleStr}
                           </td>
                           <td className="pl-6 pr-4 py-2.5 text-right font-mono tabular-nums font-bold">
-                            {resultStr}
+                            {avgStr}
                           </td>
                           <td />
                           {viewer.solves.map((solve, i) => {
@@ -572,9 +604,7 @@ function LeaderboardOverview({
                     {/* Top 3 */}
                     {eventData.top3.map((entry, rowIdx) => {
                       const { bestIdx, worstIdx } = getBestWorst(entry.solves);
-                      const resultStr = entry.result !== null
-                        ? formatResultTime(entry.result)
-                        : "—";
+                      const { singleStr, avgStr } = computeDisplayStats(entry.solves, config);
                       return (
                         <tr
                           key={entry.rank}
@@ -592,10 +622,10 @@ function LeaderboardOverview({
                             </div>
                           </td>
                           <td className="pl-8 pr-4 py-2.5 text-right font-mono tabular-nums font-bold">
-                            {getBestSingle(entry.solves)}
+                            {singleStr}
                           </td>
                           <td className="pl-6 pr-4 py-2.5 text-right font-mono tabular-nums font-bold">
-                            {resultStr}
+                            {avgStr}
                           </td>
                           <td />
                           {entry.solves.map((solve, i) => {
@@ -708,9 +738,7 @@ function EventLeaderboardDetail({
                   const viewer = leaderboardQuery.data!.viewerEntry;
                   if (!viewer) return null;
                   const { bestIdx, worstIdx } = getBestWorst(viewer.solves);
-                  const resultStr = viewer.result !== null
-                    ? formatResultTime(viewer.result)
-                    : "—";
+                  const { singleStr, avgStr } = computeDisplayStats(viewer.solves, eventConfig);
                   return (
                     <tr className="bg-orange-500/[0.03] border-l-2 border-l-orange-500/40 border-b border-b-orange-500/10">
                       <td className="px-4 py-3 text-center text-sm font-bold text-orange-400">
@@ -720,10 +748,10 @@ function EventLeaderboardDetail({
                         <span className="font-semibold text-orange-400">You</span>
                       </td>
                       <td className="pl-8 pr-4 py-3 text-right font-mono tabular-nums font-bold">
-                        {viewer.solves.length > 0 ? getBestSingle(viewer.solves) : "—"}
+                        {singleStr}
                       </td>
                       <td className="pl-6 pr-4 py-3 text-right font-mono tabular-nums font-bold">
-                        {resultStr}
+                        {avgStr}
                       </td>
                       <td />
                       {viewer.solves.map((solve, i) => {
@@ -745,9 +773,7 @@ function EventLeaderboardDetail({
 
                 {leaderboardQuery.data!.entries.map((entry, rowIdx) => {
                   const { bestIdx, worstIdx } = getBestWorst(entry.solves);
-                  const resultStr = entry.result !== null
-                    ? formatResultTime(entry.result)
-                    : "—";
+                  const { singleStr, avgStr } = computeDisplayStats(entry.solves, eventConfig);
                   return (
                     <tr
                       key={entry.rank}
@@ -777,10 +803,10 @@ function EventLeaderboardDetail({
                         </div>
                       </td>
                       <td className="pl-8 pr-4 py-3 text-right font-mono tabular-nums font-bold">
-                        {entry.solves.length > 0 ? getBestSingle(entry.solves) : "—"}
+                        {singleStr}
                       </td>
                       <td className="pl-6 pr-4 py-3 text-right font-mono tabular-nums font-bold">
-                        {resultStr}
+                        {avgStr}
                       </td>
                       <td />
                       {entry.solves.map((solve, i) => {
