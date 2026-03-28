@@ -16,7 +16,7 @@ import {
 import { getNextRollover } from "@/lib/tournament/date";
 import { useContestStatus, useLeaderboard, useLeaderboardOverview } from "@/lib/hooks/useTournament";
 import { computeAo5, computeMo3, computeBestSingle, effectiveTime, DNF_SENTINEL, type SolveForStats } from "@/lib/cubing/stats";
-import { formatTime, formatSolveTime } from "@/lib/cubing/format";
+import { formatTime, formatSolveTime, getBestAndWorst } from "@/lib/cubing/format";
 
 type Tab = "compete" | "leaderboard";
 const RESULTS_PER_PAGE = 25;
@@ -32,27 +32,9 @@ function formatCountdown(ms: number): string {
 }
 
 
-function getBestWorst(solves: SolveForStats[]) {
-  if (solves.length !== 5) return { bestIdx: -1, worstIdx: -1 };
-  const times = solves.map((s) => effectiveTime(s));
-  let bestIdx = 0, worstIdx = 0;
-  times.forEach((t, i) => {
-    if (t < times[bestIdx]) bestIdx = i;
-    // Use >= for worst so ties pick the last occurrence,
-    // ensuring bestIdx and worstIdx are different when possible.
-    if (t >= times[worstIdx] && i !== bestIdx) worstIdx = i;
-  });
-  // If all times are identical, just pick indices 0 and 4.
-  if (bestIdx === worstIdx && times.length > 1) {
-    worstIdx = times.length - 1;
-    if (worstIdx === bestIdx) bestIdx = 0;
-  }
-  return { bestIdx, worstIdx };
-}
-
 function formatAo5Times(solves: SolveForStats[]): string {
   if (solves.length !== 5) return solves.map(formatSolveTime).join("  ");
-  const { bestIdx, worstIdx } = getBestWorst(solves);
+  const { bestIdx, worstIdx } = getBestAndWorst(solves);
   return solves
     .map((s, i) => {
       const formatted = formatSolveTime(s);
@@ -546,7 +528,7 @@ function LeaderboardOverview({
                     {/* Viewer row pinned at top */}
                     {eventData.viewerEntry && (() => {
                       const viewer = eventData.viewerEntry;
-                      const { bestIdx, worstIdx } = getBestWorst(viewer.solves);
+                      const { bestIdx, worstIdx } = getBestAndWorst(viewer.solves);
                       const { singleStr, avgStr } = computeDisplayStats(viewer.solves, config);
                       return (
                         <tr className="bg-orange-500/[0.03] border-l-2 border-l-orange-500/40 border-b border-b-orange-500/10">
@@ -584,7 +566,7 @@ function LeaderboardOverview({
 
                     {/* Top 3 */}
                     {eventData.top3.map((entry, rowIdx) => {
-                      const { bestIdx, worstIdx } = getBestWorst(entry.solves);
+                      const { bestIdx, worstIdx } = getBestAndWorst(entry.solves);
                       const { singleStr, avgStr } = computeDisplayStats(entry.solves, config);
                       return (
                         <tr
@@ -718,7 +700,7 @@ function EventLeaderboardDetail({
                 {(() => {
                   const viewer = leaderboardQuery.data!.viewerEntry;
                   if (!viewer) return null;
-                  const { bestIdx, worstIdx } = getBestWorst(viewer.solves);
+                  const { bestIdx, worstIdx } = getBestAndWorst(viewer.solves);
                   const { singleStr, avgStr } = computeDisplayStats(viewer.solves, eventConfig);
                   return (
                     <tr className="bg-orange-500/[0.03] border-l-2 border-l-orange-500/40 border-b border-b-orange-500/10">
@@ -753,7 +735,7 @@ function EventLeaderboardDetail({
                 })()}
 
                 {leaderboardQuery.data!.entries.map((entry, rowIdx) => {
-                  const { bestIdx, worstIdx } = getBestWorst(entry.solves);
+                  const { bestIdx, worstIdx } = getBestAndWorst(entry.solves);
                   const { singleStr, avgStr } = computeDisplayStats(entry.solves, eventConfig);
                   return (
                     <tr
