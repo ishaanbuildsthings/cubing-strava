@@ -429,17 +429,36 @@ function EventCard({
     : null;
 
   return (
-    <button className="w-full px-4 py-3 rounded-lg hover:bg-muted/60 transition-colors text-left border-b border-border/40 last:border-0">
-      {/* Header line: icon + name + format + result on left, rank/action on right */}
-      <div className="flex items-center gap-3">
-        <EventIcon event={config} size={24} />
-        <span className="font-extrabold">{config.name}</span>
-        <span className="font-extrabold">{formatLabel}</span>
-        {status === "completed" && displayStats && (
-          <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
-        )}
-        <span className="flex-1" />
-        {/* Right side */}
+    <button className="flex items-center w-full px-4 py-3 rounded-lg hover:bg-muted/60 transition-colors text-left border-b border-border/40 last:border-0">
+      {/* Left: event info (two lines) */}
+      <div className="flex-1 min-w-0">
+        {/* Header line: icon + name + format + result */}
+        <div className="flex items-center gap-3">
+          <EventIcon event={config} size={24} />
+          <span className="font-extrabold">{config.name}</span>
+          <span className="font-extrabold">{formatLabel}</span>
+          {status === "completed" && displayStats && (
+            <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
+          )}
+        </div>
+        {/* Detail line: solve times + placeholders */}
+        <div className="mt-1 ml-9 font-mono tabular-nums text-sm text-muted-foreground">
+          {(() => {
+            const solves = enteredEvent?.solves ?? [];
+            const total = config.tournamentSolveCount;
+            const remaining = total - solves.length;
+            if (status === "completed" && total === 5 && config.tournamentRankBy === "average" && solves.length === 5) {
+              return formatAo5Times(solves);
+            }
+            const solveStrs = solves.map(formatSolveTime);
+            const placeholders = Array(remaining).fill("–.––");
+            return [...solveStrs, ...placeholders].join("  ");
+          })()}
+        </div>
+      </div>
+
+      {/* Right: action button (vertically centered across both lines) */}
+      <div className="shrink-0 ml-4">
         {status === "completed" && (
           <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-bold text-sm transition-colors">
             View
@@ -457,25 +476,6 @@ function EventCard({
             Continue ({completedSolves}/{totalSolves})
           </div>
         )}
-      </div>
-
-      {/* Detail line: solve times */}
-      {/* Detail line: solve times + placeholders for remaining */}
-      <div className="mt-1 ml-9 font-mono tabular-nums text-sm text-muted-foreground">
-        {(() => {
-          const solves = enteredEvent?.solves ?? [];
-          const total = config.tournamentSolveCount;
-          const remaining = total - solves.length;
-
-          // For completed ao5, use best/worst parentheses formatting.
-          if (status === "completed" && total === 5 && config.tournamentRankBy === "average" && solves.length === 5) {
-            return formatAo5Times(solves);
-          }
-
-          const solveStrs = solves.map(formatSolveTime);
-          const placeholders = Array(remaining).fill("–.––");
-          return [...solveStrs, ...placeholders].join("  ");
-        })()}
       </div>
     </button>
   );
