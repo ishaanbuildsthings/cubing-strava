@@ -380,7 +380,7 @@ function CompeteTab({
   );
 
   return (
-    <div className="space-y-1">
+    <div>
       {EVENT_CONFIGS.map((config) => {
         const entered = enteredMap.get(config.id);
         const unentered = unenteredMap.get(config.id);
@@ -429,7 +429,7 @@ function EventCard({
     : null;
 
   return (
-    <button className="flex items-center w-full px-4 py-3 rounded-lg hover:bg-muted/60 transition-colors text-left border-b border-border/40 last:border-0">
+    <button className="flex items-center w-full px-4 py-3 hover:bg-muted/60 transition-colors text-left border-b border-border">
       {/* Left: event info (two lines) */}
       <div className="flex-1 min-w-0">
         {/* Header line: icon + name + format + result */}
