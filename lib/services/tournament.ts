@@ -64,7 +64,8 @@ export function tournamentService(ctx: ServiceContext) {
         totalCounts.map((c) => [c.eventId, c._count])
       );
 
-      // Compute rank per event (count entries with a better result).
+      // Compute rank per event. If we have a result, count how many are
+      // better. If no result yet (in-progress), rank after all finishers.
       const rankMap = new Map<string, number>();
       for (const entry of myEntries) {
         if (entry.result !== null) {
@@ -76,6 +77,15 @@ export function tournamentService(ctx: ServiceContext) {
             },
           });
           rankMap.set(entry.eventId, betterCount + 1);
+        } else {
+          const finisherCount = await prisma.tournamentEntry.count({
+            where: {
+              tournamentId,
+              eventId: entry.eventId,
+              result: { not: null },
+            },
+          });
+          rankMap.set(entry.eventId, finisherCount + 1);
         }
       }
 
