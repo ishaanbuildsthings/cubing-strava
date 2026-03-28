@@ -19,6 +19,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { effectiveTime, DNF_SENTINEL, type EventStats } from "@/lib/cubing/stats";
+import { formatTime, formatSolveTime } from "@/lib/cubing/format";
 import { getPracticeStats } from "./idb";
 import {
   Popover,
@@ -50,26 +51,6 @@ import {
 // running    — timer is running
 type TimerState = "idle" | "inspecting" | "holding" | "ready" | "running";
 
-function formatTime(ms: number): string {
-  if (ms >= DNF_SENTINEL) return "DNF";
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const centiseconds = Math.floor((ms % 1000) / 10);
-
-  if (minutes > 0) {
-    return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
-  }
-  return `${seconds}.${String(centiseconds).padStart(2, "0")}`;
-}
-
-function formatSolveTime(solve: Solve): string {
-  if (solve.penalty === "dnf") return "DNF";
-  const time = formatTime(
-    solve.penalty === "plus_two" ? solve.timeMs + 2000 : solve.timeMs
-  );
-  return solve.penalty === "plus_two" ? `${time}+` : time;
-}
 
 export default function TimerPage() {
   const { timerSettings, updateTimerSettings } = useSettings();

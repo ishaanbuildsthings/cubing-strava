@@ -16,6 +16,7 @@ import {
 import { getNextRollover } from "@/lib/tournament/date";
 import { useContestStatus, useLeaderboard, useLeaderboardOverview } from "@/lib/hooks/useTournament";
 import { computeAo5, computeMo3, computeBestSingle, DNF_SENTINEL, type SolveForStats } from "@/lib/cubing/stats";
+import { formatTime, formatSolveTime } from "@/lib/cubing/format";
 
 type Tab = "compete" | "leaderboard";
 const RESULTS_PER_PAGE = 25;
@@ -30,27 +31,6 @@ function formatCountdown(ms: number): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function formatTime(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const centiseconds = Math.floor((ms % 1000) / 10);
-  if (minutes > 0) {
-    return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
-  }
-  return `${seconds}.${String(centiseconds).padStart(2, "0")}`;
-}
-
-function formatSolveTime(solve: { timeMs: number; penalty: string | null }): string {
-  if (solve.penalty === "dnf") return "DNF";
-  const time = formatTime(solve.penalty === "plus_two" ? solve.timeMs + 2000 : solve.timeMs);
-  return solve.penalty === "plus_two" ? `${time}+` : time;
-}
-
-function formatResultTime(resultMs: number): string {
-  if (resultMs === DNF_SENTINEL) return "DNF";
-  return formatTime(resultMs);
-}
 
 function getBestSingle(solves: { timeMs: number; penalty: string | null }[]): string {
   const times = solves.map((s) =>
