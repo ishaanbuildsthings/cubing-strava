@@ -380,21 +380,19 @@ function CompeteTab({
   );
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {EVENT_CONFIGS.map((config) => {
-          const entered = enteredMap.get(config.id);
-          const unentered = unenteredMap.get(config.id);
-          return (
-            <EventCard
-              key={config.id}
-              config={config}
-              enteredEvent={entered}
-              totalCompetitors={entered?.totalCompetitors ?? unentered?.totalCompetitors ?? 0}
-            />
-          );
-        })}
-      </div>
+    <div className="space-y-1">
+      {EVENT_CONFIGS.map((config) => {
+        const entered = enteredMap.get(config.id);
+        const unentered = unenteredMap.get(config.id);
+        return (
+          <EventCard
+            key={config.id}
+            config={config}
+            enteredEvent={entered}
+            totalCompetitors={entered?.totalCompetitors ?? unentered?.totalCompetitors ?? 0}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -431,75 +429,62 @@ function EventCard({
     : null;
 
   return (
-    <button className="rounded-lg bg-card border border-border p-4 hover:bg-muted transition-colors text-left space-y-3">
-      <div className="flex items-center gap-3">
-        <EventIcon event={config} size={36} />
-        <span className="font-extrabold text-lg flex-1">{config.name}</span>
+    <button className="flex items-center gap-4 w-full px-4 py-3 rounded-lg hover:bg-muted/60 transition-colors text-left border-b border-border/40 last:border-0">
+      {/* Event icon + name */}
+      <div className="flex items-center gap-3 w-32 shrink-0">
+        <EventIcon event={config} size={28} />
+        <span className="font-extrabold">{config.name}</span>
       </div>
 
-      {status === "not-started" && (
-        <div className="flex items-center justify-between">
+      {/* Result + format */}
+      <div className="w-36 shrink-0">
+        {status === "not-started" && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Play className="w-3.5 h-3.5" />
             <span className="text-xs font-semibold">Start</span>
           </div>
-          {totalCompetitors > 0 && (
-            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              {totalCompetitors} competing
-            </span>
-          )}
-        </div>
-      )}
-
-      {status === "in-progress" && enteredEvent && (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-yellow-500">
-              <Play className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
-            </div>
-            {totalCompetitors > 0 && (
-              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                {totalCompetitors} competing
-              </span>
-            )}
+        )}
+        {status === "in-progress" && (
+          <div className="flex items-center gap-2 text-yellow-500">
+            <Play className="w-3.5 h-3.5" />
+            <span className="text-xs font-semibold">Continue ({completedSolves}/{totalSolves})</span>
           </div>
-          <p className="text-[11px] font-mono tabular-nums text-muted-foreground leading-relaxed">
-            {enteredEvent.solves.map(formatSolveTime).join("  ")}
-          </p>
-        </div>
-      )}
-
-      {status === "completed" && enteredEvent && displayStats && (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
-              <span className="text-xs font-bold text-muted-foreground">{formatLabel}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {enteredEvent.rank && (
-                <span className="text-[10px] font-bold text-primary">
-                  #{enteredEvent.rank}
-                </span>
-              )}
-              {totalCompetitors > 0 && (
-                <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  {totalCompetitors}
-                </span>
-              )}
-            </div>
+        )}
+        {status === "completed" && displayStats && (
+          <div className="flex items-center gap-2">
+            <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
+            <span className="text-xs font-bold text-muted-foreground">{formatLabel}</span>
           </div>
-          <p className="text-[11px] font-mono tabular-nums text-muted-foreground leading-relaxed">
+        )}
+      </div>
+
+      {/* Rank */}
+      <div className="w-16 shrink-0 text-center">
+        {status === "completed" && enteredEvent?.rank && (
+          <span className="text-xs font-bold text-primary">#{enteredEvent.rank}</span>
+        )}
+      </div>
+
+      {/* Competitors */}
+      <div className="w-24 shrink-0">
+        {totalCompetitors > 0 && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            {totalCompetitors}
+          </span>
+        )}
+      </div>
+
+      {/* Solve times */}
+      <div className="flex-1 text-right">
+        {enteredEvent && enteredEvent.solves.length > 0 && (
+          <p className="text-[11px] font-mono tabular-nums text-muted-foreground">
             {config.tournamentSolveCount === 5 && config.tournamentRankBy === "average"
               ? formatAo5Times(enteredEvent.solves)
               : enteredEvent.solves.map(formatSolveTime).join("  ")}
           </p>
-        </div>
-      )}
+        )}
+      </div>
     </button>
   );
 }
