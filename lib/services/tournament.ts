@@ -160,15 +160,8 @@ export function tournamentService(ctx: ServiceContext) {
 
           let viewerRank: number | null = null;
           let viewerSolves: typeof top3Solves = [];
-          if (viewerEntry?.result != null) {
-            const betterCount = await prisma.tournamentEntry.count({
-              where: {
-                tournamentId, eventId: group.eventId,
-                result: { not: null, lt: viewerEntry.result },
-              },
-            });
-            viewerRank = betterCount + 1;
-
+          if (viewerEntry) {
+            // Always fetch viewer's solves, even if result is null (partial progress).
             viewerSolves = await prisma.solve.findMany({
               where: {
                 scrambleSetId: viewerEntry.scrambleSetId,
@@ -176,6 +169,26 @@ export function tournamentService(ctx: ServiceContext) {
               },
               orderBy: { scrambleSetIndex: "asc" },
             });
+
+            if (viewerEntry.result !== null) {
+              // Has a result — rank among finishers with better results.
+              const betterCount = await prisma.tournamentEntry.count({
+                where: {
+                  tournamentId, eventId: group.eventId,
+                  result: { not: null, lt: viewerEntry.result },
+                },
+              });
+              viewerRank = betterCount + 1;
+            } else {
+              // No result yet — rank after all finishers.
+              const finisherCount = await prisma.tournamentEntry.count({
+                where: {
+                  tournamentId, eventId: group.eventId,
+                  result: { not: null },
+                },
+              });
+              viewerRank = finisherCount + 1;
+            }
           }
 
           return {
