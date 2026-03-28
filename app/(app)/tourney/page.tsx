@@ -442,29 +442,19 @@ function EventCard({
         {/* Right side */}
         {status === "completed" && (
           <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-bold text-sm transition-colors">
-            View Results
+            View
           </div>
         )}
         {status === "not-started" && (
-          <div className="flex items-center gap-3">
-            {totalCompetitors > 0 && (
-              <span className="text-xs text-muted-foreground">{totalCompetitors} competing</span>
-            )}
-            <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors shadow-sm">
-              <Play className="w-3.5 h-3.5 fill-current" />
-              Start
-            </div>
+          <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors shadow-sm">
+            <Play className="w-3.5 h-3.5 fill-current" />
+            Start
           </div>
         )}
         {status === "in-progress" && (
-          <div className="flex items-center gap-3">
-            {totalCompetitors > 0 && (
-              <span className="text-xs text-muted-foreground">{totalCompetitors} competing</span>
-            )}
-            <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-sm transition-colors shadow-sm">
-              <Play className="w-3.5 h-3.5 fill-current" />
-              Continue ({completedSolves}/{totalSolves})
-            </div>
+          <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-sm transition-colors shadow-sm">
+            <Play className="w-3.5 h-3.5 fill-current" />
+            Continue ({completedSolves}/{totalSolves})
           </div>
         )}
       </div>
