@@ -167,15 +167,17 @@ export function tournamentService(ctx: ServiceContext) {
 
           // Get solves for top 3. All entries for the same event share one
           // scramble set, so we only need the single scrambleSetId + the user IDs.
-          const scrambleSetId = top3[0].scrambleSetId;
+          // top3 can be empty if all entries have null results (in-progress).
           const top3UserIds = top3.map((e) => e.userId);
-          const top3Solves = await prisma.solve.findMany({
-            where: {
-              scrambleSetId,
-              userId: { in: top3UserIds },
-            },
-            orderBy: { scrambleSetIndex: "asc" },
-          });
+          const top3Solves = top3.length > 0
+            ? await prisma.solve.findMany({
+                where: {
+                  scrambleSetId: top3[0].scrambleSetId,
+                  userId: { in: top3UserIds },
+                },
+                orderBy: { scrambleSetIndex: "asc" },
+              })
+            : [];
 
           // Group solves by userId (scrambleSetId is the same for all).
           const solvesMap = new Map<string, typeof top3Solves>();
