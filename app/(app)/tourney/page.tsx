@@ -314,6 +314,12 @@ export default function TourneyPage() {
             <CompeteTab
               contestData={activeContestData}
               isLoading={activeContestLoading}
+              onViewEvent={(eventId) => {
+                updateParams({ tab: "leaderboard" });
+                setTimeout(() => {
+                  document.getElementById(`event-${eventId}`)?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
             />
           ) : validEvent && viewingContest ? (
             <EventLeaderboardDetail
@@ -364,9 +370,11 @@ type ContestStatusData = {
 function CompeteTab({
   contestData,
   isLoading,
+  onViewEvent,
 }: {
   contestData: ContestStatusData | undefined;
   isLoading: boolean;
+  onViewEvent: (eventId: string) => void;
 }) {
   if (isLoading) {
     return <LoadingSpinner message="Loading events..." />;
@@ -390,6 +398,7 @@ function CompeteTab({
             config={config}
             enteredEvent={entered}
             totalCompetitors={entered?.totalCompetitors ?? unentered?.totalCompetitors ?? 0}
+            onView={() => onViewEvent(config.id)}
           />
         );
       })}
@@ -403,10 +412,12 @@ function EventCard({
   config,
   enteredEvent,
   totalCompetitors,
+  onView,
 }: {
   config: typeof EVENT_CONFIGS[number];
   enteredEvent?: ContestStatusData["events"]["enteredEvents"][number];
   totalCompetitors: number;
+  onView: () => void;
 }) {
   const totalSolves = config.tournamentSolveCount;
   const formatLabel = getFormatLabel(config);
@@ -441,9 +452,9 @@ function EventCard({
             <>
               <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
               {enteredEvent?.rank && (
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal">
-                  (<span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                  rank {enteredEvent.rank}/{totalCompetitors})
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  rank {enteredEvent.rank}/{totalCompetitors}
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse" />
                 </span>
               )}
             </>
@@ -468,7 +479,10 @@ function EventCard({
       {/* Right: action button (vertically centered across both lines) */}
       <div className="shrink-0 ml-4">
         {status === "completed" && (
-          <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-bold text-sm transition-colors">
+          <div
+            onClick={(e) => { e.stopPropagation(); onView(); }}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-bold text-sm transition-colors cursor-pointer"
+          >
             View
           </div>
         )}
@@ -528,7 +542,7 @@ function LeaderboardOverview({
           const solveCount = config.tournamentSolveCount;
 
           return (
-            <div key={config.id}>
+            <div key={config.id} id={`event-${config.id}`}>
               {/* Event header */}
               <div className="flex items-center gap-3 mb-2">
                 <EventIcon event={config} size={24} />
