@@ -308,8 +308,8 @@ export default function TourneyPage() {
       </div>
 
       {/* Tab content */}
-      <div className="px-6 py-6 flex-1">
-        <div className="max-w-5xl mx-auto w-full space-y-6">
+      <div className="px-6 pt-2 pb-6 flex-1">
+        <div className="max-w-5xl mx-auto w-full">
           {tab === "compete" ? (
             <CompeteTab
               contestData={activeContestData}
