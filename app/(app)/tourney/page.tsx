@@ -111,18 +111,21 @@ export default function TourneyPage() {
     : null;
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
-  // Single query: pass contest number from URL, or undefined for latest.
+  // Always fetch the latest contest number (React Query deduplicates
+  // if contestParam is undefined — both queries hit the same key).
+  const latestContestQuery = useContestStatus(undefined);
+  const latestNumber = latestContestQuery.data?.tournament?.number;
+
+  // Fetch the contest we're actually viewing.
   const contestStatusQuery = useContestStatus(contestParam);
 
   const activeContestData = contestStatusQuery.data;
-  const activeContestLoading = contestStatusQuery.isLoading;
+  const activeContestLoading = contestStatusQuery.isLoading || latestContestQuery.isLoading;
   const viewingContest = activeContestData?.tournament?.number;
 
   const [countdown, setCountdown] = useState("");
 
-  // Determine if this is the current (latest) contest by checking if
-  // there's no contest param in the URL, or if it matches the returned number.
-  const isCurrent = !contestParam;
+  const isCurrent = viewingContest === latestNumber;
 
   const contestDateStr = activeContestData?.tournament?.datePST
     ? new Date(activeContestData.tournament.datePST + "T12:00:00").toLocaleDateString("en-US", {
@@ -209,7 +212,7 @@ export default function TourneyPage() {
               </button>
               <button
                 onClick={() => navigateContest("next")}
-                disabled={!viewingContest || isCurrent}
+                disabled={!viewingContest || !latestNumber || viewingContest >= latestNumber}
                 className="p-1 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="w-5 h-5" />
