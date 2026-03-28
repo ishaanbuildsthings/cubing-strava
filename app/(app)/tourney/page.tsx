@@ -434,7 +434,7 @@ function EventCard({
       <div className="flex items-center gap-3">
         <EventIcon event={config} size={24} />
         <span className="font-extrabold">{config.name}</span>
-        <span className="font-extrabold text-muted-foreground">{formatLabel}</span>
+        <span className="font-extrabold">{formatLabel}</span>
         {status === "completed" && displayStats && (
           <span className="font-mono tabular-nums font-extrabold">{displayStats.rankingResult}</span>
         )}
