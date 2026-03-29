@@ -5,10 +5,12 @@ import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { formatTime, timeAgo } from "@/lib/cubing/format";
+import { useTRPC } from "@/lib/trpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heart, MessageCircle } from "lucide-react";
 
 interface PracticePostCardProps {
-  post: IPracticePost;
+  post: IPracticePost & { liked: boolean };
 }
 
 export function PracticePostCard({ post }: PracticePostCardProps) {
@@ -67,16 +69,40 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
       )}
 
       {/* Footer — like + comment buttons */}
-      <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Heart className="w-4 h-4" />
-          <span>{post.numLikes}</span>
-        </button>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <MessageCircle className="w-4 h-4" />
-          <span>{post.numComments}</span>
-        </button>
-      </div>
+      <LikeButton postId={post.id} liked={post.liked} numLikes={post.numLikes} />
+    </div>
+  );
+}
+
+function LikeButton({ postId, liked, numLikes }: { postId: string; liked: boolean; numLikes: number }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const invalidateFeed = () =>
+    queryClient.invalidateQueries({ queryKey: trpc.post.getFeed.queryKey() });
+
+  const like = useMutation(trpc.post.likePost.mutationOptions({ onSuccess: invalidateFeed }));
+  const unlike = useMutation(trpc.post.unlikePost.mutationOptions({ onSuccess: invalidateFeed }));
+
+  const isPending = like.isPending || unlike.isPending;
+
+  return (
+    <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
+      <button
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+          liked
+            ? "text-red-500"
+            : "text-muted-foreground hover:text-red-500 hover:bg-muted"
+        }`}
+        disabled={isPending}
+        onClick={() => liked ? unlike.mutate({ postId }) : like.mutate({ postId })}
+      >
+        <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+        <span>{numLikes}</span>
+      </button>
+      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+        <MessageCircle className="w-4 h-4" />
+      </button>
     </div>
   );
 }

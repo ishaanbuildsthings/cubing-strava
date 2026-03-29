@@ -26,6 +26,7 @@ model User {
   following         Follow[]          @relation("follower")
   tournamentEntries TournamentEntry[]
   practicePosts     PracticePost[]
+  postLikes         PostLike[]
 }
 
 model Event {
@@ -159,6 +160,19 @@ model PracticePost {
   user        User        @relation(fields: [userId], references: [id])
   event       Event       @relation(fields: [eventId], references: [id])
   scrambleSet ScrambleSet @relation(fields: [scrambleSetId], references: [id])
+  likes       PostLike[]
+}
+
+model PostLike {
+  id     String @id @default(cuid())
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+
+  user User          @relation(fields: [userId], references: [id])
+  post PracticePost  @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
 }
 
 model Follow {
