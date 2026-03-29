@@ -28,6 +28,20 @@ export function formatSolveTime(solve: { timeMs: number; penalty: string | null 
   return solve.penalty === "plus_two" ? `${time}+` : time;
 }
 
+// Format a Date as a relative time string (e.g. "2h ago", "3d ago").
+export function timeAgo(date: Date): string {
+  const now = Date.now();
+  const diff = now - new Date(date).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(date).toLocaleDateString();
+}
+
 // Find the indices of the best and worst solves in an ao5.
 // Used to determine which times get parenthesized in display.
 export function getBestAndWorst(solves: SolveForStats[]): { bestIdx: number; worstIdx: number } {

@@ -3,33 +3,8 @@
 import { type IPracticePost } from "@/lib/transforms/post";
 import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
-import { DNF_SENTINEL } from "@/lib/cubing/stats";
+import { formatTime, timeAgo } from "@/lib/cubing/format";
 import { Heart, MessageCircle } from "lucide-react";
-
-function formatTime(ms: number): string {
-  if (ms >= DNF_SENTINEL) return "DNF";
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const centiseconds = Math.floor((ms % 1000) / 10);
-  if (minutes > 0) {
-    return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
-  }
-  return `${seconds}.${String(centiseconds).padStart(2, "0")}`;
-}
-
-function timeAgo(date: Date): string {
-  const now = Date.now();
-  const diff = now - new Date(date).getTime();
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(date).toLocaleDateString();
-}
 
 interface PracticePostCardProps {
   post: IPracticePost;
