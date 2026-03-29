@@ -33,6 +33,7 @@ export function useStartEvent() {
     trpc.tournament.start.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.tournament.getContestStatus.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.tournament.getLeaderboardOverview.queryKey() });
       },
     })
   );

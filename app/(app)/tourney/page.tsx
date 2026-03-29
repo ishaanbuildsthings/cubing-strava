@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getNextRollover } from "@/lib/tournament/date";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/lib/trpc/client";
 import { useContestStatus, useLeaderboard, useLeaderboardOverview, useStartEvent, useSubmitSolve } from "@/lib/hooks/useTournament";
 import { useTimer } from "@/lib/hooks/useTimer";
 import { useSettings } from "@/lib/context/settings";
@@ -367,6 +368,8 @@ function LoadingSpinner({ message }: { message?: string }) {
 export default function TourneyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
 
   // Read state from URL params.
   const tab: Tab = searchParams.get("tab") === "leaderboard" ? "leaderboard" : "compete";
@@ -400,7 +403,6 @@ export default function TourneyPage() {
   } | null>(null);
 
   const startEvent = useStartEvent();
-  const queryClient = useQueryClient();
 
   const handleStartEvent = async (eventId: CubeEvent) => {
     if (!viewingContest) return;
@@ -506,8 +508,11 @@ export default function TourneyPage() {
         tournamentNumber={viewingContest}
         onComplete={() => {
           setSolvingEvent(null);
-          // Invalidate queries so compete tab and leaderboard reflect new results.
-          contestStatusQuery.refetch();
+          // Invalidate all tournament queries so compete tab and leaderboard
+          // reflect the new results (contest status, overview, full leaderboard).
+          queryClient.invalidateQueries({ queryKey: trpc.tournament.getContestStatus.queryKey() });
+          queryClient.invalidateQueries({ queryKey: trpc.tournament.getLeaderboardOverview.queryKey() });
+          queryClient.invalidateQueries({ queryKey: trpc.tournament.getLeaderboard.queryKey() });
           // Switch to leaderboard for this event.
           updateParams({ tab: "leaderboard", event: solvingEvent.eventId });
         }}
