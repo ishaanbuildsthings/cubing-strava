@@ -3,6 +3,7 @@
 import { type IPracticePost } from "@/lib/transforms/post";
 import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
+import { UserAvatar } from "@/lib/components/user-avatar";
 import { formatTime, timeAgo } from "@/lib/cubing/format";
 import { Heart, MessageCircle } from "lucide-react";
 
@@ -24,17 +25,7 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
     <div className="border border-border rounded-xl bg-card overflow-hidden">
       {/* Header — user + event + timestamp */}
       <div className="flex items-center gap-3 px-5 py-4">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold shrink-0">
-          {post.user.profilePictureUrl ? (
-            <img
-              src={post.user.profilePictureUrl}
-              alt={post.user.username}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            post.user.firstName[0]
-          )}
-        </div>
+        <UserAvatar user={post.user} size="sm" rounded="full" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-semibold truncate">{post.user.username}</span>
