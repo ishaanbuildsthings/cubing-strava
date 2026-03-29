@@ -253,6 +253,8 @@ export default function TimerPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       e.preventDefault();
 
       const s = stateRef.current;
@@ -272,6 +274,8 @@ export default function TimerPage() {
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space") return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       e.preventDefault();
 
       const s = stateRef.current;
