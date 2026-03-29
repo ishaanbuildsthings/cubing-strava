@@ -34,6 +34,7 @@ export function useStartEvent() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.tournament.getContestStatus.queryKey() });
         queryClient.invalidateQueries({ queryKey: trpc.tournament.getLeaderboardOverview.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.tournament.getLeaderboard.queryKey() });
       },
     })
   );

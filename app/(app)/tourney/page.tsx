@@ -698,10 +698,10 @@ function EventCard({
   const totalSolves = config.tournamentSolveCount;
   const formatLabel = getFormatLabel(config);
 
-  // Determine status from solve count, not result. A user with 4/5 ao5
-  // solves has a non-null result but hasn't finished — still "in-progress".
+  // Determine status from entry existence, not solve count.
+  // If a TournamentEntry exists, the user started (even if 0 solves).
   let status: "not-started" | "in-progress" | "completed";
-  if (!enteredEvent || enteredEvent.solves.length === 0) {
+  if (!enteredEvent) {
     status = "not-started";
   } else if (enteredEvent.solves.length >= totalSolves) {
     status = "completed";
