@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { type IPracticePost } from "@/lib/transforms/post";
 import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
@@ -75,24 +74,49 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
   );
 }
 
+type FeedPage = { posts: (IPracticePost & { liked: boolean })[]; nextCursor?: string };
+
+function updatePostInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  queryKey: unknown[],
+  postId: string,
+  updater: (post: FeedPage["posts"][number]) => FeedPage["posts"][number]
+) {
+  queryClient.setQueriesData<{ pages: FeedPage[]; pageParams: unknown[] }>(
+    { queryKey },
+    (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((p) => (p.id === postId ? updater(p) : p)),
+        })),
+      };
+    }
+  );
+}
+
 function LikeButton({ postId, liked, numLikes }: { postId: string; liked: boolean; numLikes: number }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [optimisticLiked, setOptimisticLiked] = useState(liked);
-  const [optimisticCount, setOptimisticCount] = useState(numLikes);
-
-  const invalidateFeed = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.post.getFeed.queryKey() });
+  const feedKey = trpc.post.getFeed.queryKey();
 
   const like = useMutation(trpc.post.likePost.mutationOptions({
-    onMutate: () => { setOptimisticLiked(true); setOptimisticCount((c) => c + 1); },
-    onError: () => { setOptimisticLiked(false); setOptimisticCount((c) => c - 1); },
-    onSuccess: invalidateFeed,
+    onMutate: () => {
+      updatePostInCache(queryClient, feedKey, postId, (p) => ({ ...p, liked: true, numLikes: p.numLikes + 1 }));
+    },
+    onError: () => {
+      updatePostInCache(queryClient, feedKey, postId, (p) => ({ ...p, liked: false, numLikes: p.numLikes - 1 }));
+    },
   }));
   const unlike = useMutation(trpc.post.unlikePost.mutationOptions({
-    onMutate: () => { setOptimisticLiked(false); setOptimisticCount((c) => c - 1); },
-    onError: () => { setOptimisticLiked(true); setOptimisticCount((c) => c + 1); },
-    onSuccess: invalidateFeed,
+    onMutate: () => {
+      updatePostInCache(queryClient, feedKey, postId, (p) => ({ ...p, liked: false, numLikes: p.numLikes - 1 }));
+    },
+    onError: () => {
+      updatePostInCache(queryClient, feedKey, postId, (p) => ({ ...p, liked: true, numLikes: p.numLikes + 1 }));
+    },
   }));
 
   const isPending = like.isPending || unlike.isPending;
@@ -101,15 +125,15 @@ function LikeButton({ postId, liked, numLikes }: { postId: string; liked: boolea
     <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
       <button
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
-          optimisticLiked
+          liked
             ? "text-red-500"
             : "text-muted-foreground hover:text-red-500 hover:bg-muted"
         }`}
         disabled={isPending}
-        onClick={() => optimisticLiked ? unlike.mutate({ postId }) : like.mutate({ postId })}
+        onClick={() => liked ? unlike.mutate({ postId }) : like.mutate({ postId })}
       >
-        <Heart className={`w-4 h-4 ${optimisticLiked ? "fill-current" : ""}`} />
-        <span>{optimisticCount}</span>
+        <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+        <span>{numLikes}</span>
       </button>
       <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
         <MessageCircle className="w-4 h-4" />
