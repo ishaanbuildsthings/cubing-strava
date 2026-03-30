@@ -65,7 +65,8 @@ export async function GET(request: Request) {
     console.error("WCA OAuth callback error:", e);
 
     let reason = "unknown";
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
+    const prismaCode = (e as { code?: string })?.code;
+    if (prismaCode === "P2002") {
       reason = "already_linked";
     } else if (e instanceof Error) {
       if (e.message.includes("does not have an assigned WCA ID")) {
