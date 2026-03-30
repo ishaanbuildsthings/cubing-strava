@@ -66,11 +66,6 @@ function buildQuickOptions(solves: { timeMs: number; penalty: "plus_two" | "dnf"
     }
   }
 
-  // Last 50 (no "best" counterpart)
-  if (n >= 50) {
-    options.push({ label: "Last 50", start: 0, end: 49 });
-  }
-
   if (lastDayIdx > 0) {
     options.push({ label: `Last day (${lastDayIdx + 1} solves)`, start: 0, end: lastDayIdx });
   }
