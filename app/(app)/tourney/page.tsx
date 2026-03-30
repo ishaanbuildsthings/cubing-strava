@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { CubeEvent, EVENT_CONFIGS, EVENT_MAP } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
-import { ChevronDown, ChevronLeft, ChevronRight, Play, ArrowLeft, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Play, ArrowLeft } from "lucide-react";
+import { CubeLoader } from "@/lib/components/cube-loader";
 import { countryCodeToFlag } from "@/lib/countries";
 import {
   DropdownMenu,
@@ -352,16 +353,6 @@ function TournamentSolveView({
   );
 }
 
-// --- Loading Spinner ---
-
-function LoadingSpinner({ message }: { message?: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-      <Loader2 className="w-6 h-6 animate-spin" />
-      {message && <p className="text-sm">{message}</p>}
-    </div>
-  );
-}
 
 // --- Main Page ---
 
@@ -483,7 +474,7 @@ export default function TourneyPage() {
   if (contestStatusQuery.isLoading) {
     return (
       <div className="flex flex-col flex-1 overflow-y-auto">
-        <LoadingSpinner message="Loading tournament..." />
+        <CubeLoader message="Loading tournament..." />
       </div>
     );
   }
@@ -650,7 +641,7 @@ function CompeteTab({
   onStartEvent: (eventId: CubeEvent) => void;
 }) {
   if (isLoading) {
-    return <LoadingSpinner message="Loading events..." />;
+    return <CubeLoader message="Loading events..." />;
   }
 
   const enteredMap = new Map(
@@ -800,7 +791,7 @@ function LeaderboardOverview({
   const overviewQuery = useLeaderboardOverview(tournamentNumber);
 
   if (overviewQuery.isLoading) {
-    return <LoadingSpinner message="Loading leaderboard..." />;
+    return <CubeLoader message="Loading leaderboard..." />;
   }
 
   if (!overviewQuery.data || overviewQuery.data.events.length === 0) {
@@ -1006,7 +997,7 @@ function EventLeaderboardDetail({
       </div>
 
       {leaderboardQuery.isLoading ? (
-        <LoadingSpinner message="Loading results..." />
+        <CubeLoader message="Loading results..." />
       ) : !leaderboardQuery.data || leaderboardQuery.data.entries.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <p className="text-muted-foreground">No entries yet for this event.</p>

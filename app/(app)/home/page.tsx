@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useTRPC } from "@/lib/trpc/client";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { PracticePostCard } from "@/lib/components/practice-post-card";
+import { CubeLoader } from "@/lib/components/cube-loader";
 
 export default function HomePage() {
   const trpc = useTRPC();
@@ -38,8 +39,8 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading feed...</p>
+      <div className="flex flex-col flex-1 items-center justify-center">
+        <CubeLoader message="Loading feed..." />
       </div>
     );
   }
