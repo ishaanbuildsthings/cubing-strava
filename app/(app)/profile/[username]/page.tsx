@@ -241,7 +241,7 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Personal Bests */}
             <section>
-              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                 🏆 Personal Bests
               </h2>
               <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -275,7 +275,7 @@ export default function ProfilePage() {
 
             {/* Recent Posts */}
             <section>
-              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                 <MessageSquare className="w-4 h-4 inline mr-1.5" />
                 Recent Posts
               </h2>
