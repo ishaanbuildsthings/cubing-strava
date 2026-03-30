@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { type EventStats, DNF_SENTINEL, recomputeStats, findBestAverageIndex, computeAo5, computeAo12, computeAo100 } from "@/lib/cubing/stats";
-import { formatTime } from "@/lib/cubing/format";
+import { formatTime, daysAgo, ONE_DAY, ONE_WEEK_IN_DAYS } from "@/lib/cubing/format";
 import { type EventConfig, getEnabledStats } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { type Solve } from "@/app/(app)/idb";
@@ -45,11 +45,8 @@ function buildQuickOptions(solves: { timeMs: number; penalty: "plus_two" | "dnf"
   options.push({ label: `All (${n})`, start: 0, end: n - 1 });
 
   // Time-based
-  const now = Date.now();
-  const dayAgo = now - 24 * 60 * 60 * 1000;
-  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
-  const lastDayIdx = solves.findLastIndex((s) => s.date >= dayAgo);
-  const lastWeekIdx = solves.findLastIndex((s) => s.date >= weekAgo);
+  const lastDayIdx = solves.findLastIndex((s) => s.date >= daysAgo(ONE_DAY));
+  const lastWeekIdx = solves.findLastIndex((s) => s.date >= daysAgo(ONE_WEEK_IN_DAYS));
 
   // Interleave Best and Last for each size, smallest first
   const avgConfigs: { size: number; aoLabel: string; fn: typeof computeAo5 }[] = [
