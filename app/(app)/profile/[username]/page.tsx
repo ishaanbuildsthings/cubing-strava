@@ -152,8 +152,8 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
       {/* Profile header */}
-      <div className="px-8 pt-8 pb-4">
-        <div className="flex items-start justify-between max-w-3xl mx-auto">
+      <div className="pt-8 pb-4 px-8 max-w-3xl mx-auto w-full">
+        <div className="flex items-start justify-between">
           <div className="flex items-center gap-5">
             <UserAvatar user={user} size="lg" rounded="xl" />
             <div>
