@@ -5,10 +5,12 @@ import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { formatTime, timeAgo } from "@/lib/cubing/format";
+import { useTRPC } from "@/lib/trpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heart, MessageCircle } from "lucide-react";
 
 interface PracticePostCardProps {
-  post: IPracticePost;
+  post: IPracticePost & { liked: boolean };
 }
 
 export function PracticePostCard({ post }: PracticePostCardProps) {
@@ -67,16 +69,76 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
       )}
 
       {/* Footer — like + comment buttons */}
-      <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <Heart className="w-4 h-4" />
-          <span>{post.numLikes}</span>
-        </button>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-          <MessageCircle className="w-4 h-4" />
-          <span>{post.numComments}</span>
-        </button>
-      </div>
+      <LikeButton postId={post.id} liked={post.liked} numLikes={post.numLikes} />
+    </div>
+  );
+}
+
+type FeedData = { pages: { posts: (IPracticePost & { liked: boolean })[]; nextCursor?: string }[]; pageParams: unknown[] };
+const FEED_KEY = [["post", "getFeed"]];
+
+function updatePostInCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  postId: string,
+  updater: (post: IPracticePost & { liked: boolean }) => IPracticePost & { liked: boolean }
+) {
+  queryClient.setQueriesData<FeedData>(
+    { queryKey: FEED_KEY },
+    (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page) => ({
+          ...page,
+          posts: page.posts.map((p) => (p.id === postId ? updater(p) : p)),
+        })),
+      };
+    }
+  );
+}
+
+function LikeButton({ postId, liked, numLikes }: { postId: string; liked: boolean; numLikes: number }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const like = useMutation(trpc.post.likePost.mutationOptions({
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: FEED_KEY });
+      updatePostInCache(queryClient, postId, (p) => ({ ...p, liked: true, numLikes: p.numLikes + 1 }));
+    },
+    onError: () => {
+      updatePostInCache(queryClient, postId, (p) => ({ ...p, liked: false, numLikes: p.numLikes - 1 }));
+    },
+  }));
+  const unlike = useMutation(trpc.post.unlikePost.mutationOptions({
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: FEED_KEY });
+      updatePostInCache(queryClient, postId, (p) => ({ ...p, liked: false, numLikes: p.numLikes - 1 }));
+    },
+    onError: () => {
+      updatePostInCache(queryClient, postId, (p) => ({ ...p, liked: true, numLikes: p.numLikes + 1 }));
+    },
+  }));
+
+  const isPending = like.isPending || unlike.isPending;
+
+  return (
+    <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
+      <button
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+          liked
+            ? "text-red-500"
+            : "text-muted-foreground hover:text-red-500 hover:bg-muted"
+        }`}
+        disabled={isPending}
+        onClick={() => liked ? unlike.mutate({ postId }) : like.mutate({ postId })}
+      >
+        <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+        <span>{numLikes}</span>
+      </button>
+      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+        <MessageCircle className="w-4 h-4" />
+      </button>
     </div>
   );
 }

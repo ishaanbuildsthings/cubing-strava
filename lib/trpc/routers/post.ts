@@ -33,7 +33,11 @@ export const postRouter = createTRPCRouter({
 
       const posts = await ctx.prisma.practicePost.findMany({
         where: { userId: { in: followedUserIds } },
-        include: { user: true, event: true },
+        include: {
+          user: true,
+          event: true,
+          likes: { where: { userId: ctx.viewer.userId }, select: { id: true } },
+        },
         orderBy: { createdAt: "desc" },
         take: FEED_PAGE_SIZE + 1,
         ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
@@ -45,9 +49,50 @@ export const postRouter = createTRPCRouter({
       }
 
       return {
-        posts: posts.map(practicePostToIPracticePost),
+        posts: posts.map((p) => ({
+          ...practicePostToIPracticePost(p),
+          liked: p.likes.length > 0,
+        })),
         nextCursor,
       };
+    }),
+
+  likePost: authedProcedure
+    .input(z.object({ postId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.$transaction(async (tx) => {
+        const existing = await tx.postLike.findUnique({
+          where: { userId_postId: { userId: ctx.viewer.userId, postId: input.postId } },
+        });
+        if (existing) return;
+        await tx.postLike.create({
+          data: { userId: ctx.viewer.userId, postId: input.postId },
+        });
+        await tx.practicePost.update({
+          where: { id: input.postId },
+          data: { numLikes: { increment: 1 } },
+        });
+      });
+      return { success: true };
+    }),
+
+  unlikePost: authedProcedure
+    .input(z.object({ postId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.$transaction(async (tx) => {
+        const existing = await tx.postLike.findUnique({
+          where: { userId_postId: { userId: ctx.viewer.userId, postId: input.postId } },
+        });
+        if (!existing) return;
+        await tx.postLike.delete({
+          where: { id: existing.id },
+        });
+        await tx.practicePost.update({
+          where: { id: input.postId },
+          data: { numLikes: { decrement: 1 } },
+        });
+      });
+      return { success: true };
     }),
 
   createPracticeSessionPost: authedProcedure
