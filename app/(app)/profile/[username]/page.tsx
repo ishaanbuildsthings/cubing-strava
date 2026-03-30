@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useViewer } from "@/lib/hooks/useViewer";
 import { useTRPC } from "@/lib/trpc/client";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { publicEnv } from "@/lib/env";
 import { toast } from "sonner";
 import { useSettings } from "@/lib/context/settings";
 
-import { ExternalLink, MessageSquare, Puzzle } from "lucide-react";
+import { ExternalLink, Puzzle } from "lucide-react";
 import Link from "next/link";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { EventIcon } from "@/lib/components/event-icon";
+import { PracticePostCard } from "@/lib/components/practice-post-card";
+import { type IUser } from "@/lib/transforms/user";
 import { countryCodeToFlag } from "@/lib/countries";
 import { CubeEvent, EVENT_MAP } from "@/lib/cubing/events";
 import { CubeLoader } from "@/lib/components/cube-loader";
@@ -25,12 +27,6 @@ const MOCK_PBS = [
   { event: CubeEvent.TWO, single: "2.31", ao5: "3.44" },
   { event: CubeEvent.FOUR, single: "38.72", ao5: "42.10" },
   { event: CubeEvent.OH, single: "14.55", ao5: "17.82" },
-];
-
-const MOCK_POSTS = [
-  { id: 1, text: "New PB! 🎉 8.42s on 3x3", time: "2h ago", likes: 12 },
-  { id: 2, text: "Finally sub-10 ao5! Feels amazing", time: "1d ago", likes: 24 },
-  { id: 3, text: "Learning F2L... it's a journey 😅", time: "3d ago", likes: 8 },
 ];
 
 const WCA_AUTHORIZE_URL = "https://www.worldcubeassociation.org/oauth/authorize";
@@ -60,7 +56,7 @@ const WCA_FLASH_MESSAGES: Record<string, { message: string; type: "success" | "e
   unknown: { message: "Something went wrong linking your WCA account.", type: "error" },
 };
 
-function FollowButton({ userId }: { userId: string }) {
+function FollowButton({ userId, username }: { userId: string; username: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { accent } = useSettings();
@@ -69,12 +65,47 @@ function FollowButton({ userId }: { userId: string }) {
     trpc.user.isFollowing.queryOptions({ userId })
   );
 
+  const userQueryKey = trpc.user.getByUsername.queryKey({ username });
+  type UserData = IUser;
+
   const follow = useMutation(trpc.user.follow.mutationOptions({
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.user.isFollowing.queryKey({ userId }) }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: userQueryKey });
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount + 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: true });
+    },
+    onError: () => {
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount - 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: false });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userQueryKey });
+      queryClient.invalidateQueries({ queryKey: trpc.user.isFollowing.queryKey({ userId }) });
+    },
   }));
 
   const unfollow = useMutation(trpc.user.unfollow.mutationOptions({
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.user.isFollowing.queryKey({ userId }) }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: userQueryKey });
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount - 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: false });
+    },
+    onError: () => {
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount + 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: true });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userQueryKey });
+      queryClient.invalidateQueries({ queryKey: trpc.user.isFollowing.queryKey({ userId }) });
+    },
   }));
 
   const isFollowing = isFollowingQuery.data?.following ?? false;
@@ -84,7 +115,7 @@ function FollowButton({ userId }: { userId: string }) {
     <button
       className={`px-4 py-2 text-sm font-bold rounded transition-all ${
         isFollowing
-          ? "bg-gradient-to-b from-neutral-600 to-neutral-700 text-foreground hover:from-red-600 hover:to-red-700 hover:text-white shadow-[0_2px_0_0_#1a1a1a]"
+          ? "bg-neutral-600 text-foreground hover:bg-neutral-500 shadow-[0_2px_0_0_#1a1a1a]"
           : `${accent.bg} text-white ${accent.hover} ${accent.shadow}`
       }`}
       disabled={isPending || isFollowingQuery.isLoading}
@@ -173,8 +204,8 @@ export default function ProfilePage() {
                 {user.firstName} {user.lastName}
               </p>
               <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
-                <span><strong className="text-foreground font-extrabold">12</strong> <span className="text-muted-foreground text-xs">Followers</span></span>
-                <span><strong className="text-foreground font-extrabold">8</strong> <span className="text-muted-foreground text-xs">Following</span></span>
+                <span><strong className="text-foreground font-extrabold">{user.followerCount}</strong> <span className="text-muted-foreground text-xs">Followers</span></span>
+                <span><strong className="text-foreground font-extrabold">{user.followingCount}</strong> <span className="text-muted-foreground text-xs">Following</span></span>
                 {user.wcaId && (
                   <a
                     href={`https://www.worldcubeassociation.org/persons/${user.wcaId}`}
@@ -209,7 +240,7 @@ export default function ProfilePage() {
               Edit Profile
             </Link>
           ) : (
-            <FollowButton userId={user.id} />
+            <FollowButton userId={user.id} username={user.username} />
           )}
         </div>
       </div>
@@ -296,27 +327,8 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            {/* Recent Posts */}
-            <section>
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">
-                <MessageSquare className="w-4 h-4 inline mr-1.5" />
-                Recent Posts
-              </h2>
-              <div className="space-y-3">
-                {MOCK_POSTS.map((post) => (
-                  <div
-                    key={post.id}
-                    className="bg-card rounded-xl border border-border p-4 transition-colors"
-                  >
-                    <p className="text-sm mb-2">{post.text}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>{post.time}</span>
-                      <span>❤️ {post.likes}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+            {/* Posts */}
+            <ProfilePosts userId={user.id} />
           </div>
         )}
 
@@ -332,5 +344,65 @@ export default function ProfilePage() {
 
       </div>
     </div>
+  );
+}
+
+function ProfilePosts({ userId }: { userId: string }) {
+  const trpc = useTRPC();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteQuery(
+      trpc.post.getUserPosts.infiniteQueryOptions(
+        { userId },
+        { getNextPageParam: (lastPage) => lastPage.nextCursor }
+      )
+    );
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
+  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+
+  if (isLoading) {
+    return <CubeLoader message="Loading posts..." />;
+  }
+
+  if (posts.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground py-4">
+        No posts yet.
+      </p>
+    );
+  }
+
+  return (
+    <section>
+      <div className="space-y-4">
+        {posts.map((post) => (
+          <PracticePostCard key={post.id} post={post} />
+        ))}
+        <div ref={sentinelRef} className="h-1" />
+        {isFetchingNextPage && (
+          <p className="text-center text-sm text-muted-foreground py-2">
+            Loading more...
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
