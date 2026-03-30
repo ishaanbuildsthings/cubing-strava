@@ -14,6 +14,7 @@ import Link from "next/link";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { EventIcon } from "@/lib/components/event-icon";
 import { PracticePostCard } from "@/lib/components/practice-post-card";
+import { type IUser } from "@/lib/transforms/user";
 import { countryCodeToFlag } from "@/lib/countries";
 import { CubeEvent, EVENT_MAP } from "@/lib/cubing/events";
 import { CubeLoader } from "@/lib/components/cube-loader";
@@ -55,7 +56,7 @@ const WCA_FLASH_MESSAGES: Record<string, { message: string; type: "success" | "e
   unknown: { message: "Something went wrong linking your WCA account.", type: "error" },
 };
 
-function FollowButton({ userId }: { userId: string }) {
+function FollowButton({ userId, username }: { userId: string; username: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { accent } = useSettings();
@@ -64,17 +65,46 @@ function FollowButton({ userId }: { userId: string }) {
     trpc.user.isFollowing.queryOptions({ userId })
   );
 
+  const userQueryKey = trpc.user.getByUsername.queryKey({ username });
+  type UserData = IUser;
+
   const follow = useMutation(trpc.user.follow.mutationOptions({
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: userQueryKey });
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount + 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: true });
+    },
+    onError: () => {
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount - 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: false });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userQueryKey });
       queryClient.invalidateQueries({ queryKey: trpc.user.isFollowing.queryKey({ userId }) });
-      queryClient.invalidateQueries({ queryKey: [["user", "getByUsername"]] });
     },
   }));
 
   const unfollow = useMutation(trpc.user.unfollow.mutationOptions({
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: userQueryKey });
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount - 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: false });
+    },
+    onError: () => {
+      queryClient.setQueryData<UserData>(userQueryKey, (old) =>
+        old ? { ...old, followerCount: old.followerCount + 1 } : old
+      );
+      queryClient.setQueryData(trpc.user.isFollowing.queryKey({ userId }), { following: true });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userQueryKey });
       queryClient.invalidateQueries({ queryKey: trpc.user.isFollowing.queryKey({ userId }) });
-      queryClient.invalidateQueries({ queryKey: [["user", "getByUsername"]] });
     },
   }));
 
@@ -210,7 +240,7 @@ export default function ProfilePage() {
               Edit Profile
             </Link>
           ) : (
-            <FollowButton userId={user.id} />
+            <FollowButton userId={user.id} username={user.username} />
           )}
         </div>
       </div>
