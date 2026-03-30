@@ -125,24 +125,33 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
 
   // Show toast for WCA OAuth result and clean the URL.
+  // Delay slightly to ensure the Toaster component is hydrated after navigation.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const wcaStatus = params.get("wca");
-    if (wcaStatus) {
-      const reason = params.get("reason") ?? wcaStatus;
-      const flash = WCA_FLASH_MESSAGES[reason] ?? WCA_FLASH_MESSAGES[wcaStatus];
+    if (!wcaStatus) return;
+
+    const reason = params.get("reason") ?? wcaStatus;
+    const flash = WCA_FLASH_MESSAGES[reason] ?? WCA_FLASH_MESSAGES[wcaStatus];
+
+    // Clean URL immediately so a refresh doesn't re-trigger
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("wca");
+    clean.searchParams.delete("reason");
+    window.history.replaceState({}, "", clean.toString());
+
+    if (wcaStatus === "linked") {
+      queryClient.invalidateQueries({ queryKey: trpc.user.getByUsername.queryKey({ username }) });
+    }
+
+    const timer = setTimeout(() => {
       if (flash) {
         if (flash.type === "success") toast.success(flash.message);
         else toast.error(flash.message);
       }
-      const clean = new URL(window.location.href);
-      clean.searchParams.delete("wca");
-      clean.searchParams.delete("reason");
-      window.history.replaceState({}, "", clean.toString());
-      if (wcaStatus === "linked") {
-        queryClient.invalidateQueries({ queryKey: trpc.user.getByUsername.queryKey({ username }) });
-      }
-    }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const profileQuery = useQuery(
@@ -214,6 +223,17 @@ export default function ProfilePage() {
                   >
                     Link WCA
                   </button>
+                )}
+                {user.youtubeChannelUrl && (
+                  <a
+                    href={user.youtubeChannelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-white hover:underline"
+                  >
+                    YouTube
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 )}
               </div>
               {user.bio && (
