@@ -229,7 +229,7 @@ export default function ProfilePage() {
                     href={user.youtubeChannelUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm text-red-500 hover:underline"
+                    className="inline-flex items-center gap-1 text-sm text-white hover:underline"
                   >
                     YouTube
                     <ExternalLink className="w-3 h-3" />

@@ -404,11 +404,14 @@ export default function SettingsPage() {
                   onKeyDown={handleKeyDown}
                   autoFocus
                 />
+                {editValue && !/^https?:\/\/(www\.)?youtube\.com\/(c\/|channel\/|@)/.test(editValue) && (
+                  <p className="text-xs text-red-500">Must be a YouTube channel URL (e.g. https://youtube.com/@yourchannel)</p>
+                )}
                 <div className="flex gap-1">
                   <button
                     className="p-1 rounded-md hover:bg-primary/20 text-primary transition-colors disabled:opacity-40"
                     onClick={() => updateMutation.mutate({ youtubeChannelUrl: editValue || null })}
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || (!!editValue && !/^https?:\/\/(www\.)?youtube\.com\/(c\/|channel\/|@)/.test(editValue))}
                   >
                     {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   </button>
