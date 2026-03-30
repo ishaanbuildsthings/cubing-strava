@@ -172,7 +172,7 @@ export default function ProfilePage() {
               <p className="text-muted-foreground">
                 {user.firstName} {user.lastName}
               </p>
-              <div className="flex items-center gap-4 mt-2 text-sm">
+              <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
                 <span><strong className="text-foreground font-extrabold">12</strong> <span className="text-muted-foreground text-xs">Followers</span></span>
                 <span><strong className="text-foreground font-extrabold">8</strong> <span className="text-muted-foreground text-xs">Following</span></span>
                 {user.wcaId && (
@@ -180,7 +180,7 @@ export default function ProfilePage() {
                     href={`https://www.worldcubeassociation.org/persons/${user.wcaId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${accent.bg} text-white ${accent.hover} transition-colors font-bold ${accent.shadow}`}
+                    className="inline-flex items-center gap-1 text-sm text-white hover:underline"
                   >
                     {user.wcaId}
                     <ExternalLink className="w-3 h-3" />
@@ -204,7 +204,7 @@ export default function ProfilePage() {
           {isOwnProfile ? (
             <Link
               href="/settings"
-              className="shrink-0 self-start whitespace-nowrap px-4 py-2 text-sm font-bold rounded bg-neutral-600 text-foreground hover:bg-neutral-500 transition-colors shadow-[0_3px_0_0_#1a1a1a]"
+              className={`shrink-0 self-start whitespace-nowrap px-4 py-2 text-sm font-bold rounded ${accent.bg} text-white ${accent.hover} transition-colors ${accent.shadow}`}
             >
               Edit Profile
             </Link>
@@ -241,26 +241,26 @@ export default function ProfilePage() {
       <div className="px-8 py-6 max-w-3xl mx-auto w-full">
         {activeTab === "overview" && (
           <div className="space-y-6">
-            {/* Medal Collection */}
-            {(user.medals.gold > 0 || user.medals.silver > 0 || user.medals.bronze > 0) && (
+            {/* Medal Showcase */}
             <section>
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">
-                Medals
+                🎖️ Medal Showcase
               </h2>
-              <div className="flex items-center gap-5">
-                {[
-                  { label: "Gold", count: user.medals.gold, color: "bg-yellow-400" },
-                  { label: "Silver", count: user.medals.silver, color: "bg-gray-300" },
-                  { label: "Bronze", count: user.medals.bronze, color: "bg-amber-700" },
-                ].map((medal) => (
-                  <div key={medal.label} className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full ${medal.color}`} />
-                    <span className="text-lg font-extrabold tabular-nums">{medal.count}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl">🥇</span>
+                  <span className="text-lg font-extrabold tabular-nums">{user.medals.gold}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl">🥈</span>
+                  <span className="text-lg font-extrabold tabular-nums">{user.medals.silver}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl">🥉</span>
+                  <span className="text-lg font-extrabold tabular-nums">{user.medals.bronze}</span>
+                </div>
               </div>
             </section>
-            )}
 
             {/* Personal Bests */}
             <section>
