@@ -21,8 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTRPC } from "@/lib/trpc/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { useSettings } from "@/lib/context/settings";
 
 interface DraftPostModalProps {
@@ -95,6 +96,8 @@ export function DraftPostModal({
   const [rangeEnd, setRangeEnd] = useState(0);
   const [isCustom, setIsCustom] = useState(false);
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const { accent } = useSettings();
 
   // Reset range when modal opens or solves change
@@ -146,7 +149,13 @@ export function DraftPostModal({
     setCaption("");
     setYoutubeUrl("");
     onOpenChange(false);
-    toast.success("Session posted!");
+    queryClient.removeQueries({ queryKey: [["post", "getFeed"]] });
+    toast.success("Session posted!", {
+      action: {
+        label: "View",
+        onClick: () => router.push("/home"),
+      },
+    });
   };
 
   const handleReset = () => {
