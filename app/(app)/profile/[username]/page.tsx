@@ -12,22 +12,12 @@ import { useSettings } from "@/lib/context/settings";
 import { ExternalLink, Puzzle } from "lucide-react";
 import Link from "next/link";
 import { UserAvatar } from "@/lib/components/user-avatar";
-import { EventIcon } from "@/lib/components/event-icon";
 import { PracticePostCard } from "@/lib/components/practice-post-card";
 import { type IUser } from "@/lib/transforms/user";
 import { countryCodeToFlag } from "@/lib/countries";
-import { CubeEvent, EVENT_MAP } from "@/lib/cubing/events";
 import { CubeLoader } from "@/lib/components/cube-loader";
 
 type ProfileTab = "overview" | "collection" | "clubs";
-
-// Mock data for placeholder UI
-const MOCK_PBS = [
-  { event: CubeEvent.THREE, single: "8.42", ao5: "10.15" },
-  { event: CubeEvent.TWO, single: "2.31", ao5: "3.44" },
-  { event: CubeEvent.FOUR, single: "38.72", ao5: "42.10" },
-  { event: CubeEvent.OH, single: "14.55", ao5: "17.82" },
-];
 
 const WCA_AUTHORIZE_URL = "https://www.worldcubeassociation.org/oauth/authorize";
 const WCA_STATE_COOKIE = "wca_oauth_state";
@@ -293,39 +283,6 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            {/* Personal Bests */}
-            <section>
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">
-                🏆 Personal Bests
-              </h2>
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="grid grid-cols-[1fr_5rem_5rem] gap-2 px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
-                  <span>Event</span>
-                  <span className="text-right">Single</span>
-                  <span className="text-right">Ao5</span>
-                </div>
-                {MOCK_PBS.map((pb) => {
-                  const config = EVENT_MAP[pb.event];
-                  return (
-                  <div
-                    key={pb.event}
-                    className="grid grid-cols-[1fr_5rem_5rem] gap-2 px-4 py-3 border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <EventIcon event={config} size={18} />
-                      <span className="text-sm font-semibold">{config.name}</span>
-                    </div>
-                    <span className="text-base font-mono tabular-nums text-right font-extrabold text-foreground">
-                      {pb.single}
-                    </span>
-                    <span className="text-base font-mono tabular-nums text-right font-extrabold text-foreground">
-                      {pb.ao5}
-                    </span>
-                  </div>
-                  );
-                })}
-              </div>
-            </section>
 
             {/* Posts */}
             <ProfilePosts userId={user.id} />
