@@ -31,8 +31,11 @@ export const postRouter = createTRPCRouter({
         })
         .then((rows) => rows.map((r) => r.followeeId));
 
+      // Include the current user's own posts in the feed
+      const feedUserIds = [...followedUserIds, ctx.viewer.userId];
+
       const posts = await ctx.prisma.practicePost.findMany({
-        where: { userId: { in: followedUserIds } },
+        where: { userId: { in: feedUserIds } },
         include: {
           user: true,
           event: true,
