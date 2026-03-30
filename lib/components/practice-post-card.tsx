@@ -8,6 +8,7 @@ import { formatTime, timeAgo } from "@/lib/cubing/format";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heart, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 interface PracticePostCardProps {
   post: IPracticePost & { liked: boolean };
@@ -27,10 +28,14 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
     <div className="border border-border rounded-xl bg-card overflow-hidden">
       {/* Header — user + event + timestamp */}
       <div className="flex items-center gap-3 px-5 py-4">
-        <UserAvatar user={post.user} size="sm" rounded="full" />
+        <Link href={`/profile/${post.user.username}`}>
+          <UserAvatar user={post.user} size="sm" rounded="full" />
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold truncate">{post.user.username}</span>
+            <Link href={`/profile/${post.user.username}`} className="font-semibold truncate hover:underline">
+              {post.user.username}
+            </Link>
             <span className="text-muted-foreground text-xs shrink-0">{timeAgo(post.createdAt)}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
