@@ -14,7 +14,12 @@ export const userRouter = createTRPCRouter({
     .input(z.object({ username: z.string() }))
     .query(async ({ ctx, input }) => {
       const user = await userService(ctx).getByUsername(input.username);
-      return userToIUser(user);
+      const medalRows = await ctx.prisma.medal.groupBy({
+        by: ["type"],
+        where: { userId: user.id },
+        _count: true,
+      });
+      return userToIUser(user, medalRows);
     }),
 
   // Check if a username is available. Returns { available: boolean }.
@@ -107,21 +112,4 @@ export const userRouter = createTRPCRouter({
       }
     }),
 
-  // Get medal counts for a user.
-  getMedalCounts: authedProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const medals = await ctx.prisma.medal.groupBy({
-        by: ["type"],
-        where: { userId: input.userId },
-        _count: true,
-      });
-      const counts = { gold: 0, silver: 0, bronze: 0 };
-      for (const m of medals) {
-        if (m.type === "GOLD") counts.gold = m._count;
-        else if (m.type === "SILVER") counts.silver = m._count;
-        else if (m.type === "BRONZE") counts.bronze = m._count;
-      }
-      return counts;
-    }),
 });

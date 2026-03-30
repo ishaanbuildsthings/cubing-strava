@@ -128,12 +128,6 @@ export default function ProfilePage() {
     trpc.user.getByUsername.queryOptions({ username })
   );
 
-  const userId = profileQuery.data?.id;
-  const medalQuery = useQuery({
-    ...trpc.user.getMedalCounts.queryOptions({ userId: userId! }),
-    enabled: !!userId,
-  });
-
   if (profileQuery.status === "pending") {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -248,16 +242,16 @@ export default function ProfilePage() {
         {activeTab === "overview" && (
           <div className="space-y-6">
             {/* Medal Collection */}
-            {medalQuery.data && (medalQuery.data.gold > 0 || medalQuery.data.silver > 0 || medalQuery.data.bronze > 0) && (
+            {(user.medals.gold > 0 || user.medals.silver > 0 || user.medals.bronze > 0) && (
             <section>
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                 Medals
               </h2>
               <div className="flex items-center gap-5">
                 {[
-                  { label: "Gold", count: medalQuery.data.gold, color: "bg-yellow-400" },
-                  { label: "Silver", count: medalQuery.data.silver, color: "bg-gray-300" },
-                  { label: "Bronze", count: medalQuery.data.bronze, color: "bg-amber-700" },
+                  { label: "Gold", count: user.medals.gold, color: "bg-yellow-400" },
+                  { label: "Silver", count: user.medals.silver, color: "bg-gray-300" },
+                  { label: "Bronze", count: user.medals.bronze, color: "bg-amber-700" },
                 ].map((medal) => (
                   <div key={medal.label} className="flex items-center gap-2">
                     <div className={`w-4 h-4 rounded-full ${medal.color}`} />
