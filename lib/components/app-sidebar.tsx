@@ -13,6 +13,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -38,6 +39,7 @@ export function AppSidebar() {
   const router = useRouter();
   const { viewer } = useViewer();
   const { accent } = useSettings();
+  const { setOpenMobile } = useSidebar();
   const supabase = createBrowserSupabaseClient();
 
   const handleSignOut = async () => {
@@ -61,7 +63,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   ) : (
                     <SidebarMenuButton
-                      render={<Link href={item.href} />}
+                      render={<Link href={item.href} onClick={() => setOpenMobile(false)} />}
                       isActive={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
                       className={item.hoverClass}
                     >
@@ -88,13 +90,13 @@ export function AppSidebar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-48">
               <DropdownMenuItem
-                render={<Link href={`/profile/${viewer.username}`} />}
+                render={<Link href={`/profile/${viewer.username}`} onClick={() => setOpenMobile(false)} />}
               >
                 <User />
                 <span>Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                render={<Link href="/settings" />}
+                render={<Link href="/settings" onClick={() => setOpenMobile(false)} />}
               >
                 <Settings />
                 <span>Settings</span>
