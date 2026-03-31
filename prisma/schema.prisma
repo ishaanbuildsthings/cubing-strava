@@ -53,7 +53,7 @@ model PersonalBest {
   id      String @id @default(cuid())
   userId  String
   eventId String
-  time    String
+  time    Int
   type    PbType
 
   user  User  @relation(fields: [userId], references: [id])
