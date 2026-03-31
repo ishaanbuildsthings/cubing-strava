@@ -142,7 +142,7 @@ export const userRouter = createTRPCRouter({
       ).nullable().optional(),
       country: z.string().length(2).nullable().optional(),
       bio: z.string().max(100).optional(),
-      youtubeChannelUrl: z.string().url().refine(
+      youtubeChannelUrl: z.string().max(200).url().refine(
         (url) => /^https?:\/\/(www\.)?youtube\.com\/(c\/|channel\/|@)/.test(url),
         { message: "Must be a YouTube channel URL" }
       ).nullable().optional(),
