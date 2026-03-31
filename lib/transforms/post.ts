@@ -12,6 +12,11 @@ export interface IPracticePost {
   bestAo100: number | null;
   bestMo3: number | null;
   sessionMean: number | null;
+  isPbSingle: boolean;
+  isPbAo5: boolean;
+  isPbAo12: boolean;
+  isPbAo100: boolean;
+  isPbMo3: boolean;
   displaySolves: number[];
   numSolves: number;
   numLikes: number;
@@ -34,6 +39,11 @@ export function practicePostToIPracticePost(
     bestAo100: post.bestAo100,
     bestMo3: post.bestMo3,
     sessionMean: post.sessionMean,
+    isPbSingle: post.isPbSingle,
+    isPbAo5: post.isPbAo5,
+    isPbAo12: post.isPbAo12,
+    isPbAo100: post.isPbAo100,
+    isPbMo3: post.isPbMo3,
     displaySolves: post.displaySolves,
     numSolves: post.numSolves,
     numLikes: post.numLikes,

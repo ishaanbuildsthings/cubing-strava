@@ -36,12 +36,12 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
   const eventConfig = EVENT_MAP[post.eventName as CubeEvent];
   const [commentsOpen, setCommentsOpen] = useState(false);
 
-  const highlights: { label: string; value: number }[] = [];
-  if (post.bestSingle !== null) highlights.push({ label: "Single", value: post.bestSingle });
-  if (post.bestAo5 !== null) highlights.push({ label: "Ao5", value: post.bestAo5 });
-  if (post.bestAo12 !== null) highlights.push({ label: "Ao12", value: post.bestAo12 });
-  if (post.bestAo100 !== null) highlights.push({ label: "Ao100", value: post.bestAo100 });
-  if (post.sessionMean !== null) highlights.push({ label: "Mean", value: post.sessionMean });
+  const highlights: { label: string; value: number; isPb: boolean }[] = [];
+  if (post.bestSingle !== null) highlights.push({ label: "Single", value: post.bestSingle, isPb: post.isPbSingle });
+  if (post.bestAo5 !== null) highlights.push({ label: "Ao5", value: post.bestAo5, isPb: post.isPbAo5 });
+  if (post.bestAo12 !== null) highlights.push({ label: "Ao12", value: post.bestAo12, isPb: post.isPbAo12 });
+  if (post.bestAo100 !== null) highlights.push({ label: "Ao100", value: post.bestAo100, isPb: post.isPbAo100 });
+  if (post.sessionMean !== null) highlights.push({ label: "Mean", value: post.sessionMean, isPb: false });
 
   return (
     <div className="border border-border rounded-xl bg-card overflow-hidden">
@@ -77,9 +77,16 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
               <span className="font-mono tabular-nums text-base font-bold">
                 {formatTime(h.value)}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                {h.label}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                  {h.label}
+                </span>
+                {h.isPb && (
+                  <span className="text-[9px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full leading-none">
+                    PB
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>

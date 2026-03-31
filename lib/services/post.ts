@@ -64,16 +64,19 @@ export function postService(ctx: ServiceContext) {
           },
         });
 
-        // Upsert personal bests — only if faster than existing
-        const candidates: { type: PbType; time: number | null }[] = [
-          { type: "single", time: input.bestSingle },
-          { type: "mo3", time: input.bestMo3 },
-          { type: "avg5", time: input.bestAo5 },
-          { type: "avg12", time: input.bestAo12 },
-          { type: "avg100", time: input.bestAo100 },
+        // Upsert personal bests — only if faster than existing.
+        // Track which stats are new PBs so we can flag them on the post.
+        const candidates: { type: PbType; time: number | null; pbField: string }[] = [
+          { type: "single", time: input.bestSingle, pbField: "isPbSingle" },
+          { type: "mo3", time: input.bestMo3, pbField: "isPbMo3" },
+          { type: "avg5", time: input.bestAo5, pbField: "isPbAo5" },
+          { type: "avg12", time: input.bestAo12, pbField: "isPbAo12" },
+          { type: "avg100", time: input.bestAo100, pbField: "isPbAo100" },
         ];
 
-        for (const { type, time } of candidates) {
+        const pbFlags: Record<string, boolean> = {};
+
+        for (const { type, time, pbField } of candidates) {
           if (time === null || time >= DNF_SENTINEL) continue;
           const existing = await tx.personalBest.findUnique({
             where: { userId_eventId_type: { userId: viewer.userId, eventId: input.eventId, type } },
@@ -84,7 +87,16 @@ export function postService(ctx: ServiceContext) {
               create: { userId: viewer.userId, eventId: input.eventId, type, time },
               update: { time },
             });
+            pbFlags[pbField] = true;
           }
+        }
+
+        // Update post with PB flags if any were set
+        if (Object.keys(pbFlags).length > 0) {
+          return tx.practicePost.update({
+            where: { id: post.id },
+            data: pbFlags,
+          });
         }
 
         return post;
