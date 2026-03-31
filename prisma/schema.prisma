@@ -153,6 +153,11 @@ model PracticePost {
   bestAo100     Int?
   sessionMean   Int?
   bestMo3       Int?
+  isPbSingle    Boolean @default(false)
+  isPbAo5       Boolean @default(false)
+  isPbAo12      Boolean @default(false)
+  isPbAo100     Boolean @default(false)
+  isPbMo3       Boolean @default(false)
   scrambleSetId  String
   displaySolves      Int[]
   numSolves   Int
