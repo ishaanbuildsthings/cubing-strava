@@ -789,7 +789,7 @@ function LeaderboardOverview({
 
   return (
     <div className="space-y-6">
-      {!viewerHasWca && (
+      {!viewerHasWca && !overviewQuery.isFetching && (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-4 py-3">
           <p className="text-sm text-yellow-200/80">
             Link your WCA account to appear on the leaderboard and earn medals.
