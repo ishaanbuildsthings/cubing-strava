@@ -396,14 +396,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Follow list modal */}
-      {followListOpen && (
-        <FollowListModal
-          userId={user.id}
-          type={followListOpen}
-          open
-          onOpenChange={(open) => { if (!open) setFollowListOpen(null); }}
-        />
-      )}
+      <FollowListModal
+        userId={user.id}
+        type={followListOpen ?? "followers"}
+        open={followListOpen !== null}
+        onOpenChange={(open) => { if (!open) setFollowListOpen(null); }}
+      />
     </div>
   );
 }
