@@ -78,7 +78,7 @@ export function postService(ctx: ServiceContext) {
           const existing = await tx.personalBest.findUnique({
             where: { userId_eventId_type: { userId: viewer.userId, eventId: input.eventId, type } },
           });
-          if (!existing || time < existing.time) {
+          if (!existing || time <= existing.time) {
             await tx.personalBest.upsert({
               where: { userId_eventId_type: { userId: viewer.userId, eventId: input.eventId, type } },
               create: { userId: viewer.userId, eventId: input.eventId, type, time },
