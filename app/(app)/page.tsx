@@ -95,9 +95,13 @@ export default function TimerPage() {
   useEffect(() => { settingsRef.current = timerSettings; }, [timerSettings]);
 
   // Load solves and scramble when event changes.
+  // Clear state synchronously first to avoid stale data flash.
   useEffect(() => {
     selectedEventRef.current = selectedEvent;
     setConfirmClear(false);
+    setSolves([]);
+    setStats(null);
+    setTotalSolveCount(0);
     setScramble(generateScramble(selectedEvent));
     setHasMore(true);
     const INITIAL_SOLVES_LOADED = 100;
