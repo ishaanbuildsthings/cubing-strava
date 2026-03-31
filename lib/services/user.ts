@@ -1,6 +1,15 @@
 import type { PrismaClient } from "@/app/generated/prisma/client";
 import type { ViewerContext } from "@/lib/viewer-context";
 
+/** Thrown by service methods when a record doesn't exist.
+ *  tRPC routers catch this and convert to TRPCError NOT_FOUND. */
+export class NotFoundError extends Error {
+  constructor(message = "Not found") {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
 export type ServiceContext = {
   prisma: PrismaClient;
   viewer: ViewerContext;
@@ -11,11 +20,17 @@ export function userService(ctx: ServiceContext) {
   return {
     list: () => prisma.user.findMany({ orderBy: { createdAt: "desc" } }),
 
-    getById: (id: string) =>
-      prisma.user.findUniqueOrThrow({ where: { id } }),
+    getById: async (id: string) => {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (!user) throw new NotFoundError("User not found");
+      return user;
+    },
 
-    getByUsername: (username: string) =>
-      prisma.user.findUniqueOrThrow({ where: { username } }),
+    getByUsername: async (username: string) => {
+      const user = await prisma.user.findUnique({ where: { username } });
+      if (!user) throw new NotFoundError("User not found");
+      return user;
+    },
 
     update: (id: string, data: { username?: string; firstName?: string; lastName?: string; wcaId?: string | null; profilePictureUrl?: string | null; country?: string | null; bio?: string }) =>
       prisma.user.update({ where: { id }, data }),

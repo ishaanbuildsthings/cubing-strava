@@ -20,7 +20,7 @@ export const postRouter = createTRPCRouter({
   getUserPosts: authedProcedure
     .input(
       z.object({
-        userId: z.string(),
+        userId: z.string().min(1).max(50),
         cursor: z.string().optional(),
       })
     )
@@ -95,7 +95,7 @@ export const postRouter = createTRPCRouter({
     }),
 
   likePost: authedProcedure
-    .input(z.object({ postId: z.string() }))
+    .input(z.object({ postId: z.string().min(1).max(50) }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.$transaction(async (tx) => {
         const existing = await tx.postLike.findUnique({
@@ -114,7 +114,7 @@ export const postRouter = createTRPCRouter({
     }),
 
   unlikePost: authedProcedure
-    .input(z.object({ postId: z.string() }))
+    .input(z.object({ postId: z.string().min(1).max(50) }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.$transaction(async (tx) => {
         const existing = await tx.postLike.findUnique({

@@ -2,9 +2,16 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { PrismaClientKnownRequestError } from "@prisma/client-runtime-utils";
 import { createTRPCRouter, authedProcedure } from "../init";
-import { userService } from "@/lib/services/user";
+import { userService, NotFoundError } from "@/lib/services/user";
 import { userToIUser } from "@/lib/transforms/user";
 import { publicEnv } from "@/lib/env";
+
+// Shared validation schemas
+const usernameSchema = z.string().min(3).max(30).regex(
+  /^[a-zA-Z0-9_]+$/,
+  "Username can only contain letters, numbers, and underscores"
+);
+const cuidSchema = z.string().min(1).max(50);
 
 export const userRouter = createTRPCRouter({
   search: authedProcedure
@@ -34,9 +41,17 @@ export const userRouter = createTRPCRouter({
   // The client determines if it's the viewer's own profile by
   // comparing IDs, and conditionally shows edit controls.
   getByUsername: authedProcedure
-    .input(z.object({ username: z.string() }))
+    .input(z.object({ username: usernameSchema }))
     .query(async ({ ctx, input }) => {
-      const user = await userService(ctx).getByUsername(input.username);
+      let user;
+      try {
+        user = await userService(ctx).getByUsername(input.username);
+      } catch (e) {
+        if (e instanceof NotFoundError) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        }
+        throw e;
+      }
       const [medalRows, followerCount, followingCount] = await Promise.all([
         ctx.prisma.medal.groupBy({
           by: ["type"],
@@ -51,7 +66,7 @@ export const userRouter = createTRPCRouter({
 
   // Check if a username is available. Returns { available: boolean }.
   checkUsername: authedProcedure
-    .input(z.object({ username: z.string().min(3).max(30) }))
+    .input(z.object({ username: usernameSchema }))
     .query(async ({ ctx, input }) => {
       const existing = await ctx.prisma.user.findUnique({
         where: { username: input.username },
@@ -64,7 +79,7 @@ export const userRouter = createTRPCRouter({
 
   // Check if the viewer is following a user.
   isFollowing: authedProcedure
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({ userId: cuidSchema }))
     .query(async ({ ctx, input }) => {
       const follow = await ctx.prisma.follow.findUnique({
         where: {
@@ -80,7 +95,7 @@ export const userRouter = createTRPCRouter({
 
   // Follow a user.
   follow: authedProcedure
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({ userId: cuidSchema }))
     .mutation(async ({ ctx, input }) => {
       if (input.userId === ctx.viewer.userId) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot follow yourself" });
@@ -96,7 +111,7 @@ export const userRouter = createTRPCRouter({
 
   // Unfollow a user.
   unfollow: authedProcedure
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({ userId: cuidSchema }))
     .mutation(async ({ ctx, input }) => {
       await ctx.prisma.follow.deleteMany({
         where: {
@@ -117,7 +132,7 @@ export const userRouter = createTRPCRouter({
   // Update the current user's profile.
   updateProfile: authedProcedure
     .input(z.object({
-      username: z.string().min(3).max(30).optional(),
+      username: usernameSchema.optional(),
       firstName: z.string().min(1).max(50).optional(),
       lastName: z.string().min(1).max(50).optional(),
       profilePictureUrl: z.string().refine(

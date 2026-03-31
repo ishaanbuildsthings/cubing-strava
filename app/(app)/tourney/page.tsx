@@ -201,10 +201,11 @@ function TournamentSolveView({
         </div>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded bg-neutral-600 text-foreground hover:bg-neutral-500 transition-colors shadow-[0_3px_0_0_#1a1a1a]"
           title="Timer settings"
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-3.5 h-3.5" />
+          Timer
         </button>
       </div>
 

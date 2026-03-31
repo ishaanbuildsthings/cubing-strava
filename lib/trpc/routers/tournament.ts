@@ -125,10 +125,13 @@ export const tournamentRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const entry = await ctx.prisma.tournamentEntry.findUniqueOrThrow({
+      const entry = await ctx.prisma.tournamentEntry.findUnique({
         where: { id: input.entryId },
         include: { tournament: true },
       });
+      if (!entry) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tournament entry not found" });
+      }
       if (entry.tournament.datePST !== getCurrentTournamentDatePST()) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "This contest has ended" });
       }
