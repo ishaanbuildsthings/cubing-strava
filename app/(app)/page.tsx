@@ -513,7 +513,7 @@ export default function TimerPage() {
       <div className="flex flex-1 overflow-hidden">
         <div className="flex flex-col flex-1 items-center justify-center gap-6">
         <p className={`font-mono text-center ${SCRAMBLE_SIZE_CLASSES[timerSettings.scrambleSize]} max-w-xl px-4 min-h-[1.75rem] whitespace-pre-line`}>
-          {scramble ?? ""}
+          {state === "running" ? "" : (scramble ?? "")}
         </p>
         <p
           className={`font-mono tabular-nums transition-colors ${
