@@ -22,13 +22,7 @@ import { useContestStatus, useLeaderboard, useLeaderboardOverview, useStartEvent
 import { useTimer } from "@/lib/hooks/useTimer";
 import { useSettings } from "@/lib/context/settings";
 import { Settings } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { TimerSettingsDialog } from "@/lib/components/timer-settings-dialog";
 import { computeAo5, computeMo3, computeBestSingle, effectiveTime, DNF_SENTINEL, type SolveForStats } from "@/lib/cubing/stats";
 import { formatTime, formatSolveTime, getBestAndWorst } from "@/lib/cubing/format";
 
@@ -201,10 +195,11 @@ function TournamentSolveView({
         </div>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded bg-neutral-600 text-foreground hover:bg-neutral-500 transition-colors shadow-[0_3px_0_0_#1a1a1a]"
           title="Timer settings"
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-3.5 h-3.5" />
+          Timer
         </button>
       </div>
 
@@ -301,55 +296,11 @@ function TournamentSolveView({
       )}
 
       {/* Timer settings dialog */}
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Timer Settings</DialogTitle>
-            <DialogDescription>Configure your timer for this session.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">Hold delay</p>
-                <p className="text-xs text-muted-foreground">How long to hold spacebar before ready</p>
-              </div>
-              <select
-                className="bg-muted rounded-md px-2 py-1 text-sm focus:outline-none"
-                value={timerSettings.holdDelayMs}
-                onChange={(e) => updateTimerSettings({ holdDelayMs: Number(e.target.value) })}
-              >
-                <option value={0}>None</option>
-                <option value={300}>0.3s</option>
-                <option value={500}>0.5s</option>
-              </select>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">Show timer</p>
-                <p className="text-xs text-muted-foreground">Display running time while solving</p>
-              </div>
-              <button
-                className={`w-10 h-6 rounded-full transition-colors ${timerSettings.showTimerWhileRunning ? accent.toggle : "bg-muted"}`}
-                onClick={() => updateTimerSettings({ showTimerWhileRunning: !timerSettings.showTimerWhileRunning })}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${timerSettings.showTimerWhileRunning ? "translate-x-4" : ""}`} />
-              </button>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">Inspection</p>
-                <p className="text-xs text-muted-foreground">WCA-style 15s countdown before timing</p>
-              </div>
-              <button
-                className={`w-10 h-6 rounded-full transition-colors ${timerSettings.useInspection ? accent.toggle : "bg-muted"}`}
-                onClick={() => updateTimerSettings({ useInspection: !timerSettings.useInspection })}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${timerSettings.useInspection ? "translate-x-4" : ""}`} />
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TimerSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        description="Configure your timer for this session."
+      />
     </div>
   );
 }

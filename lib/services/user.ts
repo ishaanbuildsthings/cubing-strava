@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@/app/generated/prisma/client";
 import type { ViewerContext } from "@/lib/viewer-context";
+import { NotFoundError } from "@/lib/errors";
 
 export type ServiceContext = {
   prisma: PrismaClient;
@@ -11,11 +12,17 @@ export function userService(ctx: ServiceContext) {
   return {
     list: () => prisma.user.findMany({ orderBy: { createdAt: "desc" } }),
 
-    getById: (id: string) =>
-      prisma.user.findUniqueOrThrow({ where: { id } }),
+    getById: async (id: string) => {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (!user) throw new NotFoundError("User not found");
+      return user;
+    },
 
-    getByUsername: (username: string) =>
-      prisma.user.findUniqueOrThrow({ where: { username } }),
+    getByUsername: async (username: string) => {
+      const user = await prisma.user.findUnique({ where: { username } });
+      if (!user) throw new NotFoundError("User not found");
+      return user;
+    },
 
     update: (id: string, data: { username?: string; firstName?: string; lastName?: string; wcaId?: string | null; profilePictureUrl?: string | null; country?: string | null; bio?: string }) =>
       prisma.user.update({ where: { id }, data }),

@@ -40,6 +40,12 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
         error.code === "INTERNAL_SERVER_ERROR"
           ? "Something went wrong"
           : shape.message,
+      // Strip Zod validation details — only expose the top-level message,
+      // not field names or validation rules that reveal our schema.
+      data: {
+        ...shape.data,
+        zodError: null,
+      },
     };
   },
 });

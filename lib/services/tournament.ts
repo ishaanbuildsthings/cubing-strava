@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@/app/generated/prisma/client";
 import type { ViewerContext } from "@/lib/viewer-context";
+import { NotFoundError } from "@/lib/errors";
 import { getCurrentTournamentDatePST } from "@/lib/tournament/date";
 import { generateScramble } from "@/lib/cubing/scramble";
 import { EVENT_CONFIGS } from "@/lib/cubing/events";
@@ -554,10 +555,13 @@ export function tournamentService(ctx: ServiceContext) {
       timeMs: number;
       penalty: "plus_two" | "dnf" | null;
     }) => {
-      const entry = await prisma.tournamentEntry.findUniqueOrThrow({
+      const entry = await prisma.tournamentEntry.findUnique({
         where: { id: input.entryId },
         include: { event: true, scrambleSet: true },
       });
+      if (!entry) {
+        throw new NotFoundError("Tournament entry not found");
+      }
 
       // Verify the entry belongs to the viewer.
       if (entry.userId !== viewer.userId) {

@@ -3,13 +3,17 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, authedProcedure } from "../init";
 import { tournamentService } from "@/lib/services/tournament";
 import { getCurrentTournamentDatePST } from "@/lib/tournament/date";
+import { CubeEvent } from "@/lib/cubing/events";
+
+const contestNumberSchema = z.number().int().positive().max(100000);
+const cuidSchema = z.string().min(1).max(50);
 
 export const tournamentRouter = createTRPCRouter({
   // Get the viewer's status across all events for a given contest.
   getContestStatus: authedProcedure
     .input(
       z.object({
-        number: z.number().int().positive().optional(),
+        number: contestNumberSchema.optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -36,7 +40,7 @@ export const tournamentRouter = createTRPCRouter({
   getLeaderboardOverview: authedProcedure
     .input(
       z.object({
-        tournamentNumber: z.number().int().positive().optional(),
+        tournamentNumber: contestNumberSchema.optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -63,8 +67,8 @@ export const tournamentRouter = createTRPCRouter({
   getLeaderboard: authedProcedure
     .input(
       z.object({
-        tournamentNumber: z.number().int().positive(),
-        eventId: z.string(),
+        tournamentNumber: contestNumberSchema,
+        eventId: z.nativeEnum(CubeEvent),
         page: z.number().int().min(1).default(1),
         pageSize: z.number().int().min(1).max(100).default(25),
       })
@@ -98,8 +102,8 @@ export const tournamentRouter = createTRPCRouter({
   start: authedProcedure
     .input(
       z.object({
-        tournamentNumber: z.number().int().positive(),
-        eventId: z.string(), // CubeEvent name, e.g. "333"
+        tournamentNumber: contestNumberSchema,
+        eventId: z.nativeEnum(CubeEvent), // CubeEvent name, e.g. "333"
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -118,17 +122,20 @@ export const tournamentRouter = createTRPCRouter({
   submitSolve: authedProcedure
     .input(
       z.object({
-        entryId: z.string(),
-        scrambleSetIndex: z.number().int().min(0),
+        entryId: cuidSchema,
+        scrambleSetIndex: z.number().int().min(0).max(20),
         timeMs: z.number().int().positive(),
         penalty: z.enum(["plus_two", "dnf"]).nullable().default(null),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const entry = await ctx.prisma.tournamentEntry.findUniqueOrThrow({
+      const entry = await ctx.prisma.tournamentEntry.findUnique({
         where: { id: input.entryId },
         include: { tournament: true },
       });
+      if (!entry) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tournament entry not found" });
+      }
       if (entry.tournament.datePST !== getCurrentTournamentDatePST()) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "This contest has ended" });
       }
