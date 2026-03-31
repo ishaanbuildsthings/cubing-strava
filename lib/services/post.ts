@@ -1,5 +1,6 @@
-import type { PrismaClient } from "@/app/generated/prisma/client";
+import type { PbType } from "@/app/generated/prisma/client";
 import type { ServiceContext } from "./user";
+import { DNF_SENTINEL } from "@/lib/cubing/stats";
 
 type CreatePracticeSessionInput = {
   eventId: string;
@@ -43,7 +44,7 @@ export function postService(ctx: ServiceContext) {
           })),
         });
 
-        return tx.practicePost.create({
+        const post = await tx.practicePost.create({
           data: {
             userId: viewer.userId,
             eventId: input.eventId,
@@ -62,6 +63,31 @@ export function postService(ctx: ServiceContext) {
             numComments: 0,
           },
         });
+
+        // Upsert personal bests — only if faster than existing
+        const candidates: { type: PbType; time: number | null }[] = [
+          { type: "single", time: input.bestSingle },
+          { type: "mo3", time: input.bestMo3 },
+          { type: "avg5", time: input.bestAo5 },
+          { type: "avg12", time: input.bestAo12 },
+          { type: "avg100", time: input.bestAo100 },
+        ];
+
+        for (const { type, time } of candidates) {
+          if (time === null || time >= DNF_SENTINEL) continue;
+          const existing = await tx.personalBest.findUnique({
+            where: { userId_eventId_type: { userId: viewer.userId, eventId: input.eventId, type } },
+          });
+          if (!existing || time <= existing.time) {
+            await tx.personalBest.upsert({
+              where: { userId_eventId_type: { userId: viewer.userId, eventId: input.eventId, type } },
+              create: { userId: viewer.userId, eventId: input.eventId, type, time },
+              update: { time },
+            });
+          }
+        }
+
+        return post;
       }),
   };
 }
