@@ -26,7 +26,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { X, Copy, Check, Trash2, ChevronDown, Settings, PanelRightClose, PanelRightOpen, FilePen } from "lucide-react";
+import { X, Copy, Check, Trash2, ChevronDown, Settings, PanelRightClose, PanelRightOpen, FilePen, BarChart3 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useSettings } from "@/lib/context/settings";
 import { TimerSettingsDialog } from "@/lib/components/timer-settings-dialog";
 import { SCRAMBLE_SIZE_CLASSES } from "@/lib/settings/timer";
@@ -61,6 +68,7 @@ export default function TimerPage() {
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mobileStatsOpen, setMobileStatsOpen] = useState(false);
   const [postOpen, setPostOpen] = useState(false);
   // Whether there are more solves in IDB beyond what's currently loaded.
   // False once a batch returns fewer results than requested.
@@ -342,6 +350,13 @@ export default function TimerPage() {
             </button>
           )}
           <button
+            className="flex md:hidden items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded bg-neutral-600 text-foreground hover:bg-neutral-500 transition-colors shadow-[0_3px_0_0_#1a1a1a]"
+            onClick={() => setMobileStatsOpen(true)}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Stats
+          </button>
+          <button
             className="flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded bg-neutral-600 text-foreground hover:bg-neutral-500 transition-colors shadow-[0_3px_0_0_#1a1a1a]"
             onClick={() => setSettingsOpen(true)}
           >
@@ -355,6 +370,102 @@ export default function TimerPage() {
           onOpenChange={setSettingsOpen}
           description="Configure your practice session."
         />
+
+        {/* Mobile stats dialog */}
+        <Dialog open={mobileStatsOpen} onOpenChange={setMobileStatsOpen}>
+          <DialogContent className="max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Session Stats</DialogTitle>
+              <DialogDescription>
+                {solves.length} solve{solves.length !== 1 ? "s" : ""} this session
+              </DialogDescription>
+            </DialogHeader>
+            {stats && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 px-1">
+                  <span />
+                  <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Current</span>
+                  <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest text-right">Best</span>
+                </div>
+                {getPracticeStats(selectedEvent).includes("single") && (
+                  <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 items-center px-1">
+                    <span className="text-sm font-semibold text-muted-foreground">Single</span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {solves.length > 0 ? formatSolveTime(solves[0]) : "-"}
+                    </span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.bestSingle !== null ? formatTime(stats.bestSingle) : "-"}
+                    </span>
+                  </div>
+                )}
+                {getPracticeStats(selectedEvent).includes("mo3") && (
+                  <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 items-center px-1">
+                    <span className="text-sm font-semibold text-muted-foreground">Mo3</span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.currentMo3 !== null ? formatTime(stats.currentMo3) : "-"}
+                    </span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.bestMo3 !== null ? formatTime(stats.bestMo3) : "-"}
+                    </span>
+                  </div>
+                )}
+                {getPracticeStats(selectedEvent).includes("ao5") && (
+                  <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 items-center px-1">
+                    <span className="text-sm font-semibold text-muted-foreground">Ao5</span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.currentAo5 !== null ? formatTime(stats.currentAo5) : "-"}
+                    </span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.bestAo5 !== null ? formatTime(stats.bestAo5) : "-"}
+                    </span>
+                  </div>
+                )}
+                {getPracticeStats(selectedEvent).includes("ao12") && (
+                  <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 items-center px-1">
+                    <span className="text-sm font-semibold text-muted-foreground">Ao12</span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.currentAo12 !== null ? formatTime(stats.currentAo12) : "-"}
+                    </span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.bestAo12 !== null ? formatTime(stats.bestAo12) : "-"}
+                    </span>
+                  </div>
+                )}
+                {getPracticeStats(selectedEvent).includes("ao100") && (
+                  <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 items-center px-1">
+                    <span className="text-sm font-semibold text-muted-foreground">Ao100</span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.currentAo100 !== null ? formatTime(stats.currentAo100) : "-"}
+                    </span>
+                    <span className="font-mono tabular-nums text-sm font-bold text-right">
+                      {stats.bestAo100 !== null ? formatTime(stats.bestAo100) : "-"}
+                    </span>
+                  </div>
+                )}
+                <div className="grid grid-cols-[1fr_4rem_4rem] gap-x-3 items-center px-1">
+                  <span className="text-sm font-semibold text-muted-foreground">Mean</span>
+                  <span className="font-mono tabular-nums text-sm font-bold text-right">
+                    {stats.sessionMean !== null ? formatTime(stats.sessionMean) : "-"}
+                  </span>
+                  <span />
+                </div>
+              </div>
+            )}
+            {solves.length > 0 && (
+              <div className="mt-4 border-t border-border pt-3">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Solves</p>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {solves.map((solve, i) => (
+                    <div key={solve.id} className="flex items-center justify-between px-1 py-1 text-sm">
+                      <span className="text-muted-foreground">{solves.length - i}</span>
+                      <span className="font-mono tabular-nums font-bold">{formatSolveTime(solve)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Timer area */}
@@ -381,7 +492,7 @@ export default function TimerPage() {
         </div>
 
       {/* Right panel — stats + solves list */}
-      <aside className={`shrink-0 border-l border-border flex flex-col bg-card transition-all ${rightPanelOpen ? "w-56" : "w-10"}`}>
+      <aside className={`shrink-0 border-l border-border hidden md:flex flex-col bg-card transition-all ${rightPanelOpen ? "w-56" : "w-10"}`}>
         {/* Collapse toggle */}
         <button
           className="flex items-center px-3 py-2 hover:bg-muted transition-colors"
