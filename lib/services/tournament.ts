@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@/app/generated/prisma/client";
 import type { ViewerContext } from "@/lib/viewer-context";
+import { NotFoundError } from "@/lib/errors";
 import { getCurrentTournamentDatePST } from "@/lib/tournament/date";
 import { generateScramble } from "@/lib/cubing/scramble";
 import { EVENT_CONFIGS } from "@/lib/cubing/events";
@@ -559,7 +560,7 @@ export function tournamentService(ctx: ServiceContext) {
         include: { event: true, scrambleSet: true },
       });
       if (!entry) {
-        throw new Error("Tournament entry not found");
+        throw new NotFoundError("Tournament entry not found");
       }
 
       // Verify the entry belongs to the viewer.

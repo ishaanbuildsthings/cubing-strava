@@ -2,7 +2,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { PrismaClientKnownRequestError } from "@prisma/client-runtime-utils";
 import { createTRPCRouter, authedProcedure } from "../init";
-import { userService, NotFoundError } from "@/lib/services/user";
+import { userService } from "@/lib/services/user";
+import { NotFoundError } from "@/lib/errors";
 import { userToIUser } from "@/lib/transforms/user";
 import { publicEnv } from "@/lib/env";
 
