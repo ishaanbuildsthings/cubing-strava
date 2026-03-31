@@ -2,7 +2,6 @@
 
 import { useState, useContext, useRef, useEffect } from "react";
 import { type IPracticePost } from "@/lib/transforms/post";
-import { type IUser } from "@/lib/transforms/user";
 import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
@@ -22,7 +21,7 @@ import Link from "next/link";
 
 export interface IComment {
   id: string;
-  user: IUser;
+  user: { id: string; username: string; profilePictureUrl: string | null; firstName: string; lastName: string };
   body: string;
   createdAt: Date;
 }

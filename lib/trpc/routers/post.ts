@@ -6,7 +6,6 @@ import { CubeEvent, EVENT_MAP, getEnabledStats } from "@/lib/cubing/events";
 import { eventService } from "@/lib/services/event";
 import { postService } from "@/lib/services/post";
 import { practicePostToIPracticePost } from "@/lib/transforms/post";
-import { userToIUser } from "@/lib/transforms/user";
 
 
 const solveSchema = z.object({
@@ -33,7 +32,7 @@ export const postRouter = createTRPCRouter({
           event: true,
           likes: { where: { userId: ctx.viewer.userId }, select: { id: true } },
           comments: {
-            include: { user: true },
+            include: { user: { select: { id: true, username: true, profilePictureUrl: true, firstName: true, lastName: true } } },
             orderBy: { createdAt: "desc" },
           },
         },
@@ -53,7 +52,7 @@ export const postRouter = createTRPCRouter({
           liked: p.likes.length > 0,
           comments: p.comments.map((c) => ({
             id: c.id,
-            user: userToIUser(c.user),
+            user: c.user,
             body: c.body,
             createdAt: c.createdAt,
           })),
@@ -86,7 +85,7 @@ export const postRouter = createTRPCRouter({
           event: true,
           likes: { where: { userId: ctx.viewer.userId }, select: { id: true } },
           comments: {
-            include: { user: true },
+            include: { user: { select: { id: true, username: true, profilePictureUrl: true, firstName: true, lastName: true } } },
             orderBy: { createdAt: "desc" },
           },
         },
@@ -106,7 +105,7 @@ export const postRouter = createTRPCRouter({
           liked: p.likes.length > 0,
           comments: p.comments.map((c) => ({
             id: c.id,
-            user: userToIUser(c.user),
+            user: c.user,
             body: c.body,
             createdAt: c.createdAt,
           })),
@@ -159,7 +158,7 @@ export const postRouter = createTRPCRouter({
       const comment = await ctx.prisma.$transaction(async (tx) => {
         const c = await tx.postComment.create({
           data: { userId: ctx.viewer.userId, postId: input.postId, body: input.body },
-          include: { user: true },
+          include: { user: { select: { id: true, username: true, profilePictureUrl: true, firstName: true, lastName: true } } },
         });
         await tx.practicePost.update({
           where: { id: input.postId },
@@ -169,7 +168,7 @@ export const postRouter = createTRPCRouter({
       });
       return {
         id: comment.id,
-        user: userToIUser(comment.user),
+        user: comment.user,
         body: comment.body,
         createdAt: comment.createdAt,
       };
