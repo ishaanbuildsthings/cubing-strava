@@ -10,7 +10,6 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, Trash2, Send, MoreHorizontal } from "lucide-react";
 import { ViewerContext } from "@/lib/context/viewer";
-import { useSettings } from "@/lib/context/settings";
 import {
   Dialog,
   DialogContent,
@@ -218,7 +217,6 @@ function updatePostInCache(
 }
 
 function PostFooter({ post, onOpenComments }: { post: PostWithInteractions; onOpenComments: () => void; }) {
-  const { accent } = useSettings();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -246,10 +244,8 @@ function PostFooter({ post, onOpenComments }: { post: PostWithInteractions; onOp
   return (
     <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
       <button
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
-          post.liked
-            ? accent.text
-            : `text-muted-foreground ${accent.hoverSubtle}`
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors hover:bg-muted ${
+          post.liked ? "text-white" : "text-muted-foreground"
         }`}
         disabled={likePending}
         onClick={() => post.liked ? unlike.mutate({ postId: post.id }) : like.mutate({ postId: post.id })}
