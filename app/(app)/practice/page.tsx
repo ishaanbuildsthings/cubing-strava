@@ -282,6 +282,7 @@ export default function TimerPage() {
   // Ref to the scrollable <ul> container — needed by the virtualizer to
   // measure scroll position and determine which rows are visible.
   const scrollParentRef = useRef<HTMLUListElement>(null);
+  const timerAreaRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const holdStartRef = useRef<number | null>(null);
@@ -514,10 +515,6 @@ export default function TimerPage() {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Ignore touches on interactive elements (buttons, inputs, links, etc.)
-      const target = e.target as HTMLElement;
-      if (target.closest("button, a, input, select, textarea, [role='button'], dialog")) return;
-
       const s = stateRef.current;
       if (s === "running") {
         stopTimer();
@@ -533,9 +530,6 @@ export default function TimerPage() {
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest("button, a, input, select, textarea, [role='button'], dialog")) return;
-
       const s = stateRef.current;
       if (s === "ready") {
         cancelHold();
@@ -550,15 +544,17 @@ export default function TimerPage() {
       }
     };
 
+    const timerArea = timerAreaRef.current;
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd);
+    timerArea?.addEventListener("touchstart", handleTouchStart, { passive: true });
+    timerArea?.addEventListener("touchend", handleTouchEnd);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
+      timerArea?.removeEventListener("touchstart", handleTouchStart);
+      timerArea?.removeEventListener("touchend", handleTouchEnd);
     };
   }, [startTimer, stopTimer, startInspection, beginHold, cancelHold]);
 
@@ -727,7 +723,7 @@ export default function TimerPage() {
 
       {/* Timer area */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex flex-col flex-1 items-center justify-center gap-6">
+        <div ref={timerAreaRef} className="flex flex-col flex-1 items-center justify-center gap-6 touch-none">
         <p className={`font-mono text-center ${SCRAMBLE_SIZE_CLASSES[timerSettings.scrambleSize]} max-w-xl px-4 min-h-[1.75rem] whitespace-pre-line`}>
           {state === "running" ? "" : (scramble ?? "")}
         </p>

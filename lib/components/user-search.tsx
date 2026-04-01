@@ -66,7 +66,7 @@ export function UserSearch() {
         />
       </div>
       {open && debouncedQuery.length >= 1 && results && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-y-auto max-h-[220px] z-50">
           {results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-muted-foreground">No users found</p>
           ) : (
