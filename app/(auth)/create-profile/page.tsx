@@ -398,7 +398,7 @@ function StepFollow({ onNext }: { onNext: () => void }) {
           onClick={onNext}
           className="w-full rounded-lg bg-amber-600 hover:bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_3px_0_0_theme(colors.amber.800)] active:shadow-none active:translate-y-[3px] mt-4"
         >
-          {following ? "Let's go!" : "Continue"}
+          {following ? "Let's cube!" : "Continue"}
         </button>
       </div>
     </>
