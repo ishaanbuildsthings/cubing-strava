@@ -174,25 +174,16 @@ function removePostFromCache(
   }
 }
 
-/** Rounded 3D cube icon for likes. */
+/** Colored isometric cube icon matching the favicon (blue top, red left, white right). */
 function CubeIcon({ className, filled }: { className?: string; filled?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round">
-      {/* Outer cube outline */}
-      <path
-        d="M12 2L21 7.5V16.5L12 22L3 16.5V7.5L12 2Z"
-        stroke="currentColor"
-        strokeWidth={2}
-        fill={filled ? "currentColor" : "none"}
-        opacity={filled ? 0.2 : 1}
-      />
-      {/* Inner edges — center vertical + two diagonals to corners */}
-      <path
-        d="M12 22V12M3 7.5L12 12L21 7.5"
-        stroke="currentColor"
-        strokeWidth={2}
-        opacity={filled ? 0.8 : 1}
-      />
+    <svg viewBox="0 0 24 24" className={className}>
+      {/* Top face — blue */}
+      <polygon points="12,2 21.5,7.5 12,13 2.5,7.5" fill={filled ? "#3B82F6" : "none"} stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
+      {/* Left face — red */}
+      <polygon points="2.5,7.5 12,13 12,22 2.5,16.5" fill={filled ? "#E53E3E" : "none"} stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
+      {/* Right face — white */}
+      <polygon points="21.5,7.5 12,13 12,22 21.5,16.5" fill={filled ? "#F5F5F5" : "none"} stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
     </svg>
   );
 }
