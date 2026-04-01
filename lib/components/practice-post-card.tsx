@@ -250,7 +250,7 @@ function PostFooter({ post, onOpenComments }: { post: PostWithInteractions; onOp
         disabled={likePending}
         onClick={() => post.liked ? unlike.mutate({ postId: post.id }) : like.mutate({ postId: post.id })}
       >
-        <CubeIcon className="w-4 h-4" filled={post.liked} />
+        <CubeIcon className={`w-4 h-4 ${post.liked ? "cube-pop" : ""}`} filled={post.liked} key={post.liked ? "liked" : "not-liked"} />
         <span>{post.numLikes}</span>
       </button>
       <button
