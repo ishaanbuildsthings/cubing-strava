@@ -150,7 +150,7 @@ function StepProfile({
             maxLength={30}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/40"
             placeholder="cuber123"
           />
         </div>
@@ -167,7 +167,7 @@ function StepProfile({
               maxLength={50}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/40"
             />
           </div>
           <div>
@@ -181,7 +181,7 @@ function StepProfile({
               maxLength={50}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/40"
             />
           </div>
         </div>
@@ -194,7 +194,7 @@ function StepProfile({
             id="country"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring appearance-none"
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-white/40 appearance-none"
           >
             <option value="">Select a country</option>
             {COUNTRIES.map((c) => (
@@ -325,7 +325,7 @@ function StepYouTube({ onNext }: { onNext: () => void }) {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/40"
               placeholder="https://youtube.com/@yourchannel"
             />
           </div>
