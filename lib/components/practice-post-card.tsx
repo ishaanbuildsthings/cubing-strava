@@ -33,8 +33,23 @@ interface PracticePostCardProps {
 }
 
 export function PracticePostCard({ post }: PracticePostCardProps) {
+  const viewer = useContext(ViewerContext);
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const eventConfig = EVENT_MAP[post.eventName as CubeEvent];
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const deletePost = useMutation(trpc.post.deletePost.mutationOptions({
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: [["post"]] });
+      removePostFromCache(queryClient, post.id);
+    },
+    onSuccess: () => {
+      // Invalidate user queries to refresh PBs on profile
+      queryClient.invalidateQueries({ queryKey: [["user"]] });
+    },
+  }));
 
   const highlights: { label: string; value: number; isPb: boolean }[] = [];
   if (post.bestSingle !== null) highlights.push({ label: "Single", value: post.bestSingle, isPb: post.isPbSingle });
@@ -64,6 +79,31 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
             <span>{post.numSolves} solve{post.numSolves !== 1 ? "s" : ""}</span>
           </div>
         </div>
+        {viewer && viewer.viewer.id === post.user.id && (
+          confirmDelete ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                className="text-xs text-red-500 font-medium hover:text-red-400 transition-colors"
+                onClick={() => { deletePost.mutate({ postId: post.id }); setConfirmDelete(false); }}
+              >
+                Delete
+              </button>
+              <button
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              className="p-1 text-muted-foreground/50 hover:text-red-500 transition-colors"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )
+        )}
       </div>
 
       {/* Stat highlights */}
@@ -109,6 +149,28 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
 }
 
 type PostPageData = { pages: { posts: PostWithInteractions[]; nextCursor?: string }[]; pageParams: unknown[] };
+
+// Remove a post from all infinite query caches (feed + profile posts)
+function removePostFromCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  postId: string,
+) {
+  for (const key of [[["post", "getFeed"]], [["post", "getUserPosts"]]]) {
+    queryClient.setQueriesData<PostPageData>(
+      { queryKey: key },
+      (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            posts: page.posts.filter((p) => p.id !== postId),
+          })),
+        };
+      }
+    );
+  }
+}
 
 // Update a post in all infinite query caches (feed + profile posts)
 function updatePostInCache(
