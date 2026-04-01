@@ -112,7 +112,7 @@ function TournamentSolveView({
   const { timerSettings, updateTimerSettings, accent } = useSettings();
   const submitSolve = useSubmitSolve();
   const [solves, setSolves] = useState<SolveForStats[]>(initialSolves);
-  const [entryResult, setEntryResult] = useState<number | null>(null);
+
   const [pendingTime, setPendingTime] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +157,6 @@ function TournamentSolveView({
 
       // Server confirmed — update local state from response.
       setSolves(result.solves);
-      setEntryResult(result.result);
       setPendingTime(null);
       timer.reset();
     } catch (e) {
@@ -168,7 +167,7 @@ function TournamentSolveView({
   };
 
   // Compute current display stats from submitted solves.
-  const displayStats = solves.length > 0 ? computeDisplayStats(solves, eventConfig, entryResult) : null;
+  const displayStats = solves.length > 0 ? computeDisplayStats(solves, eventConfig, null) : null;
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden select-none">
