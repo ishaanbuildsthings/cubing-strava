@@ -305,9 +305,9 @@ function StepYouTube({ onNext }: { onNext: () => void }) {
   return (
     <>
       <div className="text-center space-y-1 mb-6">
-        <h1 className="text-2xl font-extrabold">Add your YouTube channel</h1>
+        <h1 className="text-2xl font-extrabold">Link your YouTube</h1>
         <p className="text-sm text-muted-foreground">
-          Share your cubing content with the community
+          Add a link to your channel on your profile
         </p>
       </div>
 
@@ -319,7 +319,7 @@ function StepYouTube({ onNext }: { onNext: () => void }) {
         <div className="w-full space-y-3">
           <div>
             <label htmlFor="youtube" className="block text-sm font-medium text-muted-foreground mb-1">
-              Channel URL
+              Channel URL <span className="text-muted-foreground/60">(optional)</span>
             </label>
             <input
               id="youtube"
@@ -338,16 +338,8 @@ function StepYouTube({ onNext }: { onNext: () => void }) {
             disabled={saving}
             className="w-full rounded-lg bg-amber-600 hover:bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition-colors disabled:opacity-50 shadow-[0_3px_0_0_theme(colors.amber.800)] active:shadow-none active:translate-y-[3px]"
           >
-            {saving ? "Saving..." : url.trim() ? "Save & Continue" : "Continue"}
+            {saving ? "Saving..." : url.trim() ? "Save & Continue" : "Skip"}
           </button>
-          {url.trim() && (
-            <button
-              onClick={onNext}
-              className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              Skip for now
-            </button>
-          )}
         </div>
       </div>
     </>
@@ -364,39 +356,10 @@ function StepFollow({ onNext }: { onNext: () => void }) {
     onSuccess: () => setFollowing(true),
   }));
 
-  // We need the actual user ID — let's fetch it
-  const [resolvedUsers, setResolvedUsers] = useState<Array<{
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    profilePictureUrl: string | null;
-  }>>([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-
-  // Fetch recommended user profiles on mount
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`/api/trpc/user.getByUsername?batch=1&input=${encodeURIComponent(JSON.stringify({ "0": { json: { username: "ishaan" } } }))}`);
-        const data = await res.json();
-        const user = data[0]?.result?.data?.json;
-        if (user) {
-          setResolvedUsers([{
-            id: user.id,
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            profilePictureUrl: user.profilePictureUrl,
-          }]);
-        }
-      } catch {
-        // Silently fail — skip step if user lookup fails
-      } finally {
-        setLoadingUsers(false);
-      }
-    })();
-  }, []);
+  // Fetch the recommended user via tRPC query
+  const recommendedUser = useQuery(trpc.user.getByUsername.queryOptions({ username: "ishaan" }));
+  const user = recommendedUser.data;
+  const loadingUsers = recommendedUser.isLoading;
 
   return (
     <>
@@ -412,31 +375,26 @@ function StepFollow({ onNext }: { onNext: () => void }) {
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-2 border-muted-foreground/30 border-t-amber-500 rounded-full animate-spin" />
           </div>
-        ) : (
-          resolvedUsers.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card"
-            >
-              <UserAvatar user={user} size="sm" rounded="full" />
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{user.firstName} {user.lastName}</p>
-                <p className="text-xs text-muted-foreground">@{user.username}</p>
-              </div>
-              <button
-                onClick={() => followMutation.mutate({ userId: user.id })}
-                disabled={following || followMutation.isPending}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  following
-                    ? "bg-muted text-muted-foreground"
-                    : "bg-amber-600 hover:bg-amber-500 text-white"
-                }`}
-              >
-                {following ? "Following" : followMutation.isPending ? "..." : "Follow"}
-              </button>
+        ) : user ? (
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+            <UserAvatar user={user} size="sm" rounded="full" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate">{user.firstName} {user.lastName}</p>
+              <p className="text-xs text-muted-foreground">@{user.username}</p>
             </div>
-          ))
-        )}
+            <button
+              onClick={() => followMutation.mutate({ userId: user.id })}
+              disabled={following || followMutation.isPending}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                following
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-amber-600 hover:bg-amber-500 text-white"
+              }`}
+            >
+              {following ? "Following" : followMutation.isPending ? "..." : "Follow"}
+            </button>
+          </div>
+        ) : null}
 
         <button
           onClick={onNext}
