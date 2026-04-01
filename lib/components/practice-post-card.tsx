@@ -174,15 +174,39 @@ function removePostFromCache(
   }
 }
 
-/** Colored isometric cube icon matching the favicon proportions (blue top, red left, white right). */
+/** Colored isometric cube icon with rounded corners (blue top, red left, white right). */
 function CubeIcon({ className, filled }: { className?: string; filled?: boolean }) {
-  // Exact proportional scale of favicon coordinates (512-space → 24-wide):
-  // scale = 24/288, offset x by -112, y by -100
+  // Single outline path with rounded joins for the whole cube silhouette,
+  // then individual face fills drawn inside.
   return (
-    <svg viewBox="0 0 24 26" className={className}>
-      <path d="M12,0.5 L23.5,7.17 L12,13.83 L0.5,7.17 Z" fill={filled ? "#3B82F6" : "none"} stroke="#333" strokeWidth={0.8} strokeLinejoin="round" />
-      <path d="M0.5,7.17 L12,13.83 L12,25.33 L0.5,19.17 Z" fill={filled ? "#E53E3E" : "none"} stroke="#333" strokeWidth={0.8} strokeLinejoin="round" />
-      <path d="M23.5,7.17 L12,13.83 L12,25.33 L23.5,19.17 Z" fill={filled ? "#F5F5F5" : "none"} stroke="#333" strokeWidth={0.8} strokeLinejoin="round" />
+    <svg viewBox="0 0 64 72" className={className} fill="none">
+      {/* Top face */}
+      <path
+        d="M32,6 Q34,6 52,16 Q54,17 54,19 L54,19 Q54,17 34,28 Q32,29 30,28 Q10,17 10,17 Q8,16 10,15 Z"
+        fill={filled ? "#3B82F6" : "none"}
+      />
+      {/* Left face */}
+      <path
+        d="M10,17 Q8,18 8,20 L8,48 Q8,50 10,51 L30,63 Q32,64 32,62 L32,29 Q32,29 30,28 Z"
+        fill={filled ? "#E53E3E" : "none"}
+      />
+      {/* Right face */}
+      <path
+        d="M54,17 Q56,18 56,20 L56,48 Q56,50 54,51 L34,63 Q32,64 32,62 L32,29 Q32,29 34,28 Z"
+        fill={filled ? "#F5F5F5" : "none"}
+      />
+      {/* Full cube outline — single path for clean rounded corners */}
+      <path
+        d="M30,7 Q32,5.5 34,7 L53,17.5 Q56,19.5 56,22 L56,48 Q56,51 53,52.5 L34,63.5 Q32,65 30,63.5 L11,52.5 Q8,51 8,48 L8,22 Q8,19.5 11,17.5 Z"
+        stroke="#333"
+        strokeWidth={3.5}
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Inner edges */}
+      <line x1="32" y1="29" x2="32" y2="63" stroke="#333" strokeWidth={2.5} strokeLinecap="round" />
+      <line x1="10" y1="18" x2="32" y2="29" stroke="#333" strokeWidth={2.5} strokeLinecap="round" />
+      <line x1="54" y1="18" x2="32" y2="29" stroke="#333" strokeWidth={2.5} strokeLinecap="round" />
     </svg>
   );
 }
