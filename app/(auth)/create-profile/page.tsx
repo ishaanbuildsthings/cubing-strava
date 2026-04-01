@@ -235,8 +235,8 @@ function StepWCA({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="flex flex-col items-center gap-6">
-        <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center text-3xl font-extrabold tracking-tight text-foreground">
-          WCA
+        <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center p-3">
+          <img src="/wcalogo.svg" alt="WCA" className="w-full h-full object-contain" />
         </div>
 
         <div className="text-center space-y-2 text-sm text-muted-foreground max-w-xs">
