@@ -36,7 +36,7 @@ export default function LoginPage() {
     }
 
     const { error } = mode === "signup"
-      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/` } })
+      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/create-profile` } })
       : await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);

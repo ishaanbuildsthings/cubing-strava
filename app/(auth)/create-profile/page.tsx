@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { COUNTRIES, countryCodeToFlag } from "@/lib/countries";
@@ -412,7 +413,7 @@ export default function CreateProfilePage() {
   const trpc = useTRPC();
 
   // Resume from a specific step (e.g. after WCA OAuth redirect).
-  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const searchParams = useSearchParams();
   const initialStep = parseInt(searchParams.get("step") ?? "0", 10);
   const resumingStep = isNaN(initialStep) ? 0 : initialStep;
 
@@ -426,6 +427,33 @@ export default function CreateProfilePage() {
       router.replace("/practice");
     }
   }, [whoAmI.data, justCreated, resumingStep, router]);
+
+  // Show toast for WCA OAuth result and clean the URL.
+  useEffect(() => {
+    const wcaStatus = searchParams.get("wca");
+    if (!wcaStatus) return;
+    const reason = searchParams.get("reason") ?? wcaStatus;
+
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("wca");
+    clean.searchParams.delete("reason");
+    window.history.replaceState({}, "", clean.toString());
+
+    const messages: Record<string, { msg: string; type: "success" | "error" }> = {
+      linked: { msg: "WCA account linked!", type: "success" },
+      already_linked: { msg: "This WCA account is already linked to another user.", type: "error" },
+      no_wca_id: { msg: "Your WCA account doesn't have an assigned WCA ID.", type: "error" },
+      invalid_state: { msg: "WCA linking failed — please try again.", type: "error" },
+      unknown: { msg: "Something went wrong linking your WCA account.", type: "error" },
+    };
+    const flash = messages[reason] ?? messages[wcaStatus];
+    if (flash) {
+      setTimeout(() => {
+        if (flash.type === "success") toast.success(flash.msg);
+        else toast.error(flash.msg);
+      }, 100);
+    }
+  }, [searchParams]);
 
   const [step, setStep] = useState(resumingStep);
 
