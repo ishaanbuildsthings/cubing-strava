@@ -9,7 +9,7 @@ import { publicEnv } from "@/lib/env";
 import { toast } from "sonner";
 import { useSettings } from "@/lib/context/settings";
 
-import { ExternalLink, Puzzle, Trophy, Search, ArrowRightLeft } from "lucide-react";
+import { ExternalLink, Puzzle, Trophy, Search, ArrowRightLeft, Loader2 } from "lucide-react";
 import { InfoTooltip } from "@/lib/components/info-tooltip";
 import Link from "next/link";
 import { UserAvatar } from "@/lib/components/user-avatar";
@@ -448,7 +448,7 @@ function ComparePBsModal({ viewer, onClose }: { viewer: IUser; onClose: () => vo
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="!max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-4xl w-[calc(100%-2rem)] mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="w-5 h-5" />
@@ -489,7 +489,7 @@ function ComparePBsModal({ viewer, onClose }: { viewer: IUser; onClose: () => vo
                 {debouncedQuery.length > 0 && !opponent && (
                   <div className="absolute top-full right-0 w-64 mt-1 bg-popover border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
                     {searching ? (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
+                      <div className="flex justify-center py-3"><Loader2 className="w-5 h-5 text-muted-foreground animate-spin" /></div>
                     ) : searchResults && searchResults.length > 0 ? (
                       searchResults
                         .filter((u) => u.id !== viewer.id)
@@ -519,7 +519,8 @@ function ComparePBsModal({ viewer, onClose }: { viewer: IUser; onClose: () => vo
         )}
 
         {/* Interlaced comparison table */}
-        <div className="border border-border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto -mx-4 px-4">
+        <div className="border border-border rounded-lg overflow-hidden min-w-[600px]">
           {/* Header */}
           <div className="flex items-center px-3 py-2 bg-muted/50 border-b border-border">
             <div className="w-16 shrink-0 flex items-center gap-1.5">
@@ -582,6 +583,7 @@ function ComparePBsModal({ viewer, onClose }: { viewer: IUser; onClose: () => vo
               {opponent ? "No PBs to compare." : "Search for a user to compare PBs."}
             </div>
           )}
+        </div>
         </div>
       </DialogContent>
     </Dialog>
