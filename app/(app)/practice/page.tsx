@@ -159,7 +159,7 @@ function StatDetailModal({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             {title}
@@ -196,7 +196,7 @@ function StatDetailModal({
         {windowSolves.length === 0 ? (
           <p className="text-sm text-muted-foreground">Not enough solves.</p>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-1 overflow-y-auto min-h-0 flex-1 pr-3">
             {windowSolves.map((solve, i) => {
               const trimmed = trimmedIndices.has(i);
               return (
@@ -272,6 +272,7 @@ export default function TimerPage() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mobileStatsOpen, setMobileStatsOpen] = useState(false);
+  const [expandedSolveId, setExpandedSolveId] = useState<number | null>(null);
   const [postOpen, setPostOpen] = useState(false);
   const [statDetail, setStatDetail] = useState<{ stat: StatType; variant: "current" | "best" } | null>(null);
   // Whether there are more solves in IDB beyond what's currently loaded.
@@ -625,8 +626,8 @@ export default function TimerPage() {
         />
 
         {/* Mobile stats dialog */}
-        <Dialog open={mobileStatsOpen} onOpenChange={setMobileStatsOpen}>
-          <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <Dialog open={mobileStatsOpen} onOpenChange={(open) => { setMobileStatsOpen(open); if (!open) { setExpandedSolveId(null); setConfirmClear(false); } }}>
+          <DialogContent className="max-h-[80vh] flex flex-col overflow-hidden">
             <DialogHeader>
               <DialogTitle>Session Stats</DialogTitle>
               <DialogDescription>
@@ -705,15 +706,108 @@ export default function TimerPage() {
               </div>
             )}
             {solves.length > 0 && (
-              <div className="mt-4 border-t border-border pt-3">
+              <div className="mt-4 border-t border-border pt-3 flex flex-col min-h-0 flex-1 overflow-hidden">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Solves</p>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {solves.map((solve, i) => (
-                    <div key={solve.id} className="flex items-center justify-between px-1 py-1 text-sm">
-                      <span className="text-muted-foreground">{solves.length - i}</span>
-                      <span className="font-mono tabular-nums font-bold">{formatSolveTime(solve)}</span>
+                <div className="space-y-0.5 overflow-y-auto min-h-0 flex-1 pr-1">
+                  {solves.map((solve, i) => {
+                    const isExpanded = expandedSolveId === solve.id;
+                    return (
+                      <div key={solve.id} className={`rounded-md transition-colors ${isExpanded ? "bg-muted/50" : ""}`}>
+                        <button
+                          className="flex items-center justify-between w-full px-2 py-2 text-sm text-left"
+                          onClick={() => setExpandedSolveId(isExpanded ? null : solve.id)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground tabular-nums text-xs w-5">{solves.length - i}</span>
+                            <span className="font-mono tabular-nums font-bold">{formatSolveTime(solve)}</span>
+                          </div>
+                          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                        </button>
+                        {isExpanded && (
+                          <div className="px-2 pb-2 space-y-2">
+                            {/* Scramble + copy */}
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="font-mono text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                                {solve.scramble}
+                              </p>
+                              <button
+                                className={`p-1 rounded-md transition-colors shrink-0 ${
+                                  copiedId === solve.id
+                                    ? "text-green-500"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                }`}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${formatSolveTime(solve)}   ${solve.scramble}`);
+                                  setCopiedId(solve.id);
+                                  setTimeout(() => setCopiedId(null), 1500);
+                                }}
+                              >
+                                {copiedId === solve.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                            {/* Penalty toggle */}
+                            <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+                              {([null, "plus_two", "dnf"] as const).map((p) => (
+                                <button
+                                  key={p ?? "ok"}
+                                  className={`flex-1 text-xs font-semibold py-1.5 rounded-md transition-colors ${
+                                    solve.penalty === p
+                                      ? `${accent.bg} text-white shadow-sm`
+                                      : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                  onClick={() => handlePenalty(solve.id, p)}
+                                >
+                                  {p === null ? "None" : p === "plus_two" ? "+2" : "DNF"}
+                                </button>
+                              ))}
+                            </div>
+                            {/* Delete */}
+                            <button
+                              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-md px-2 py-1.5 transition-colors"
+                              onClick={() => handleDelete(solve.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete solve
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="pt-3 border-t border-border mt-3">
+                  {confirmClear ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        className="text-xs text-red-500 font-semibold py-1 px-3 rounded-md bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                        onClick={() => {
+                          clearSolves(selectedEvent).then((newStats) => {
+                            setSolves([]);
+                            setTotalSolveCount(0);
+                            setStats(newStats);
+                            setConfirmClear(false);
+                            setMobileStatsOpen(false);
+                          });
+                        }}
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        className="text-xs text-muted-foreground py-1 px-3 rounded-md hover:bg-muted transition-colors"
+                        onClick={() => setConfirmClear(false)}
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  ))}
+                  ) : (
+                    <button
+                      className="flex items-center justify-center gap-1.5 w-full text-xs text-muted-foreground hover:text-red-500 py-1.5 px-3 rounded-md hover:bg-red-500/10 transition-colors"
+                      onClick={() => setConfirmClear(true)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Clear session
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -723,25 +817,27 @@ export default function TimerPage() {
 
       {/* Timer area */}
       <div className="flex flex-1 overflow-hidden">
-        <div ref={timerAreaRef} className="flex flex-col flex-1 items-center justify-center gap-6 touch-none">
-        <p className={`font-mono text-center ${SCRAMBLE_SIZE_CLASSES[timerSettings.scrambleSize]} max-w-xl px-4 min-h-[1.75rem] whitespace-pre-line`}>
+        <div ref={timerAreaRef} className="flex flex-col flex-1 items-center touch-none">
+        <p className={`font-mono text-center ${SCRAMBLE_SIZE_CLASSES[timerSettings.scrambleSize]} w-full px-8 min-h-[1.75rem] whitespace-pre-line pt-4`}>
           {state === "running" ? "" : (scramble ?? "")}
         </p>
-        <p
-          className={`font-mono tabular-nums transition-colors ${
-            state === "holding" ? "text-red-500" :
-            state === "ready" ? "text-green-500" :
-            state === "inspecting" ? "text-yellow-500" :
-            ""
-          }`}
-          style={{ fontSize: "clamp(3rem, 15vw, 8rem)" }}
-        >
-          {state === "inspecting" || ((state === "holding" || state === "ready") && inspectionStartRef.current !== null)
-            ? Math.max(0, Math.ceil((timerSettings.inspectionDurationMs - inspectionTime) / 1000))
-            : state === "running" && !timerSettings.showTimerWhileRunning
-              ? "Solve!"
-              : formatTime(elapsed)}
-        </p>
+        <div className="flex flex-1 items-center justify-center -mt-[8vh]">
+          <p
+            className={`font-mono tabular-nums transition-colors ${
+              state === "holding" ? "text-red-500" :
+              state === "ready" ? "text-green-500" :
+              state === "inspecting" ? "text-yellow-500" :
+              ""
+            }`}
+            style={{ fontSize: "clamp(3rem, 15vw, 8rem)" }}
+          >
+            {state === "inspecting" || ((state === "holding" || state === "ready") && inspectionStartRef.current !== null)
+              ? Math.max(0, Math.ceil((timerSettings.inspectionDurationMs - inspectionTime) / 1000))
+              : state === "running" && !timerSettings.showTimerWhileRunning
+                ? "Solve!"
+                : formatTime(elapsed)}
+          </p>
+        </div>
         </div>
 
       {/* Right panel — stats + solves list */}

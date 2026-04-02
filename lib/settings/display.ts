@@ -35,14 +35,11 @@ export const ACCENT_STYLES: Record<AccentColor, {
 };
 
 export interface DisplaySettings {
-  /** Use 3D SVG icons instead of flat cubing-icons font. */
-  use3dIcons: boolean;
   /** Accent color for buttons, toggles, and highlights. */
   accentColor: AccentColor;
 }
 
 export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
-  use3dIcons: false,
   accentColor: "orange",
 };
 
