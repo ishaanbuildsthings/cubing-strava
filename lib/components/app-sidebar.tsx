@@ -63,16 +63,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="mx-2 mb-2 flex items-center gap-2 rounded-lg bg-[oklch(0.18_0.005_60)] p-2 px-3 hover:bg-[oklch(0.22_0.005_60)] transition-colors">
+        <div className="mx-2 mb-2 flex items-center gap-1.5 rounded-lg bg-[oklch(0.18_0.005_60)] p-2 hover:bg-[oklch(0.22_0.005_60)] transition-colors">
           <Link
             href={`/profile/${viewer.username}`}
             onClick={() => setOpenMobile(false)}
             className="flex items-center gap-2 min-w-0 flex-1"
           >
             <UserAvatar user={viewer} size="sm" rounded="xl" />
-            <span className="text-base font-bold truncate">{viewer.firstName}</span>
+            <span className="text-sm font-bold truncate">{viewer.firstName}</span>
           </Link>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center shrink-0">
             <Link
               href="/settings"
               onClick={() => setOpenMobile(false)}
