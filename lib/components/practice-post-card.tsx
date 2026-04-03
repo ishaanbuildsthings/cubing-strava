@@ -7,7 +7,6 @@ import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { formatTime, timeAgo } from "@/lib/cubing/format";
 import { useTRPC } from "@/lib/trpc/client";
-import { useSettings } from "@/lib/context/settings";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, Trash2, Send, MoreHorizontal } from "lucide-react";
 import { ViewerContext } from "@/lib/context/viewer";
@@ -47,7 +46,6 @@ interface PracticePostCardProps {
 
 export function PracticePostCard({ post }: PracticePostCardProps) {
   const viewer = useContext(ViewerContext);
-  const { accent } = useSettings();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const eventConfig = EVENT_MAP[post.eventName as CubeEvent];
@@ -74,7 +72,7 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
     <div className="border border-border rounded-xl bg-card overflow-hidden">
       {/* Header — user + event + timestamp */}
       <div className="flex items-center gap-3 px-5 py-4">
-        <Link href={`/profile/${post.user.username}`} className={`rounded-full border-2 ${accent.border}`}>
+        <Link href={`/profile/${post.user.username}`}>
           <UserAvatar user={post.user} size="sm" rounded="full" />
         </Link>
         <div className="flex-1 min-w-0">
@@ -266,14 +264,13 @@ function PostFooter({ post, onOpenComments }: { post: PostWithInteractions; onOp
   return (
     <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
       <button
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all hover:bg-muted ${
-          post.liked ? "text-white like-btn-pop" : "text-muted-foreground"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors hover:bg-muted ${
+          post.liked ? "text-white" : "text-muted-foreground"
         }`}
         disabled={likePending}
         onClick={() => post.liked ? unlike.mutate({ postId: post.id }) : like.mutate({ postId: post.id })}
-        key={post.liked ? "liked" : "not-liked"}
       >
-        <CubeIcon className={`w-4 h-4 ${post.liked ? "cube-pop" : ""}`} filled={post.liked} />
+        <CubeIcon className={`w-4 h-4 ${post.liked ? "cube-pop" : ""}`} filled={post.liked} key={post.liked ? "liked" : "not-liked"} />
         <span>{post.numLikes}</span>
       </button>
       <button
