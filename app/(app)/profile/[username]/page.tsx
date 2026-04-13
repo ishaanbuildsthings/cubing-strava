@@ -359,16 +359,18 @@ export default function ProfilePage() {
       </div>
 
       {/* Tab content */}
-      <div className="px-8 py-6 max-w-3xl mx-auto w-full">
-        {activeTab === "overview" && (
-          <ProfilePosts userId={user.id} />
-        )}
+      {activeTab === "overview" && (
+        <ProfilePosts userId={user.id} />
+      )}
 
-        {activeTab === "achievements" && (
+      {activeTab === "achievements" && (
+        <div className="px-8 py-6 max-w-3xl mx-auto w-full">
           <AchievementsTab user={user} />
-        )}
+        </div>
+      )}
 
-        {activeTab === "collection" && (
+      {activeTab === "collection" && (
+        <div className="px-8 py-6 max-w-3xl mx-auto w-full">
           <div className="text-center py-12">
             <Puzzle className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
             <p className="text-muted-foreground font-semibold">Puzzle Collection</p>
@@ -376,9 +378,8 @@ export default function ProfilePage() {
               {isOwnProfile ? "Add puzzles to your collection" : `${user.firstName}'s puzzles will appear here`}
             </p>
           </div>
-        )}
-
-      </div>
+        </div>
+      )}
 
       {/* Follow list modal */}
       <FollowListModal
@@ -749,14 +750,16 @@ function ProfilePosts({ userId }: { userId: string }) {
   }
 
   return (
-    <section>
-      <div className="space-y-4">
+    <section className="flex-1">
+      <div className="mx-auto max-w-2xl border-x border-border bg-card min-h-full">
         {posts.map((post) => (
-          <PracticePostCard key={post.id} post={post} />
+          <div key={post.id} className="border-b border-border">
+            <PracticePostCard post={post} />
+          </div>
         ))}
         <div ref={sentinelRef} className="h-1" />
         {isFetchingNextPage && (
-          <p className="text-center text-sm text-muted-foreground py-2">
+          <p className="text-center text-sm text-muted-foreground py-4">
             Loading more...
           </p>
         )}
