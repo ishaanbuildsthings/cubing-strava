@@ -279,8 +279,7 @@ function StatDetail({ label, parentValue }: { label: string; parentValue: number
   if (label === "Single") {
     return (
       <div className="mt-4 pt-3 border-t border-border/30">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Scramble</p>
-        <p className="text-xs font-mono text-muted-foreground leading-relaxed">{solves[0].scramble}</p>
+        <SolveRow solve={solves[0]} index={0} />
       </div>
     );
   }
