@@ -7,8 +7,8 @@ import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
 import { formatTime, timeAgo } from "@/lib/cubing/format";
 import { useTRPC } from "@/lib/trpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Trash2, Send, MoreHorizontal } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MessageCircle, Trash2, Send, MoreHorizontal, Loader2, ChevronDown, LinkIcon } from "lucide-react";
 import { ViewerContext } from "@/lib/context/viewer";
 import {
   Dialog,
@@ -61,40 +61,48 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
     },
   }));
 
-  const highlights: { label: string; value: number; isPb: boolean }[] = [];
-  if (post.bestSingle !== null) highlights.push({ label: "Single", value: post.bestSingle, isPb: post.isPbSingle });
-  if (post.bestAo5 !== null) highlights.push({ label: "Ao5", value: post.bestAo5, isPb: post.isPbAo5 });
-  if (post.bestAo12 !== null) highlights.push({ label: "Ao12", value: post.bestAo12, isPb: post.isPbAo12 });
-  if (post.bestAo100 !== null) highlights.push({ label: "Ao100", value: post.bestAo100, isPb: post.isPbAo100 });
-  if (post.sessionMean !== null) highlights.push({ label: "Mean", value: post.sessionMean, isPb: false });
+  const [expandedStat, setExpandedStat] = useState<string | null>(null);
+
+  const highlights: { label: string; value: number; isPb: boolean; expandable: boolean }[] = [];
+  if (post.bestSingle !== null) highlights.push({ label: "Single", value: post.bestSingle, isPb: post.isPbSingle, expandable: true });
+  if (post.bestAo5 !== null) highlights.push({ label: "Ao5", value: post.bestAo5, isPb: post.isPbAo5, expandable: true });
+  if (post.bestAo12 !== null) highlights.push({ label: "Ao12", value: post.bestAo12, isPb: post.isPbAo12, expandable: true });
+  if (post.bestAo100 !== null) highlights.push({ label: "Ao100", value: post.bestAo100, isPb: post.isPbAo100, expandable: true });
+  if (post.sessionMean !== null) highlights.push({ label: "Mean", value: post.sessionMean, isPb: false, expandable: false });
 
   return (
-    <div className="border border-border rounded-xl bg-card overflow-hidden">
-      {/* Header — user + event + timestamp */}
-      <div className="flex items-center gap-3 px-5 py-4">
-        <Link href={`/profile/${post.user.username}`}>
+    <div className="px-5 py-4">
+      {/* Attribution — avatar | name @user · time */}
+      <div className="flex items-center gap-3">
+        <Link href={`/profile/${post.user.username}`} className="shrink-0">
           <UserAvatar user={post.user} size="sm" rounded="full" />
         </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <Link href={`/profile/${post.user.username}`} className="font-semibold truncate hover:underline">
-              {post.user.username}
-            </Link>
-            <span className="text-muted-foreground text-xs shrink-0">{timeAgo(post.createdAt)}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {eventConfig && <EventIcon event={eventConfig} size={16} />}
-            <span>{eventConfig?.name ?? post.eventName}</span>
-            <span className="text-muted-foreground/50">·</span>
-            <span>{post.numSolves} solve{post.numSolves !== 1 ? "s" : ""}</span>
-          </div>
+        <div className="flex items-baseline gap-1.5 min-w-0 flex-1 text-sm">
+          <Link href={`/profile/${post.user.username}`} className="font-bold truncate hover:underline">
+            {post.user.firstName} {post.user.lastName}
+          </Link>
+          <span className="text-muted-foreground truncate">@{post.user.username}</span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground shrink-0">{timeAgo(post.createdAt)}</span>
         </div>
-        {viewer && viewer.viewer.id === post.user.id && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="p-1 text-muted-foreground/50 hover:text-foreground transition-colors">
-              <MoreHorizontal className="w-5 h-5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="shrink-0 p-1 text-muted-foreground/50 hover:text-foreground transition-colors">
+            <MoreHorizontal className="w-3.5 h-3.5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuItem
+              onClick={() => {
+                const url = `${window.location.origin}/post/${post.id}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Link copied!");
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <LinkIcon className="w-4 h-4 shrink-0" />
+                <span className="font-medium">Copy link</span>
+              </div>
+            </DropdownMenuItem>
+            {viewer && viewer.viewer.id === post.user.id && (
               <DropdownMenuItem
                 className="text-red-500 focus:text-red-500"
                 onClick={() => deletePost.mutate({ postId: post.id })}
@@ -107,49 +115,65 @@ export function PracticePostCard({ post }: PracticePostCardProps) {
                   </div>
                 </div>
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Stat highlights */}
+      {/* Post title — event + solve count */}
+      <div className="flex items-center gap-2 mt-3">
+        {eventConfig && <EventIcon event={eventConfig} size={20} />}
+        <span className="text-base font-bold">{eventConfig?.name ?? post.eventName}</span>
+        <span className="text-sm text-muted-foreground">{post.numSolves} solve{post.numSolves !== 1 ? "s" : ""}</span>
+      </div>
+
+      {/* Stats */}
       {highlights.length > 0 && (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-px bg-border mx-5 mb-4 rounded-lg overflow-hidden">
-          {highlights.map((h) => (
-            <div
-              key={h.label}
-              className="flex flex-col items-center gap-1 bg-muted/50 px-3 py-3"
-            >
-              <span className="font-mono tabular-nums text-base font-bold">
-                {formatTime(h.value)}
-              </span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                  {h.label}
+        <div className="mt-6 mb-2">
+          <div className="flex justify-center gap-10">
+            {highlights.map((h) => (
+              <button
+                key={h.label}
+                className={`flex flex-col items-center group ${h.expandable ? "cursor-pointer" : "cursor-default"}`}
+                onClick={() => {
+                  if (!h.expandable) return;
+                  setExpandedStat(expandedStat === h.label ? null : h.label);
+                }}
+              >
+                <span className={`font-mono tabular-nums text-lg font-bold tracking-tight transition-colors ${
+                  expandedStat === h.label ? "text-foreground" : h.expandable ? "group-hover:text-foreground/80" : ""
+                }`}>
+                  {formatTime(h.value)}
                 </span>
-                {h.isPb && (
-                  <span className="text-[9px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full leading-none">
-                    PB
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+                <span className="flex items-center gap-0.5 text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
+                  {h.label}{h.isPb && <span className="text-amber-400 ml-1">PB</span>}
+                  {h.expandable && (
+                    <ChevronDown className={`w-2.5 h-2.5 ml-0.5 transition-transform duration-200 ${
+                      expandedStat === h.label ? "rotate-180" : ""
+                    }`} />
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Expanded solve detail */}
+          {expandedStat && (
+            <StatDetail label={expandedStat} parentValue={highlights.find((h) => h.label === expandedStat)!.value} />
+          )}
         </div>
       )}
 
       {/* Caption */}
       {post.caption && (
-        <div className="px-5 pb-4">
-          <p className="text-sm leading-relaxed break-all">{post.caption}</p>
-        </div>
+        <p className="text-sm leading-relaxed break-words mt-5">{post.caption}</p>
       )}
 
       {/* YouTube embed */}
       {post.youtubeUrl && (() => {
         const videoId = extractYouTubeId(post.youtubeUrl!);
         return videoId ? (
-          <div className="mx-5 mb-4 rounded-lg overflow-hidden aspect-video">
+          <div className="mt-3 rounded-lg overflow-hidden aspect-video">
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${videoId}`}
               className="w-full h-full"
@@ -191,6 +215,104 @@ function removePostFromCache(
       }
     );
   }
+}
+
+// Mock solve data for the expandable stat detail.
+// TODO: Replace with real data once the data model is ready.
+function getMockSolves(label: string, parentValue: number): { timeMs: number; scramble: string; isBest: boolean; isWorst: boolean }[] {
+  const count = label === "Single" ? 1 : label === "Ao5" ? 5 : label === "Ao12" ? 12 : 100;
+  // Generate realistic-looking times scattered around the parent value
+  const base = parentValue;
+  const solves = Array.from({ length: Math.min(count, 12) }, (_, i) => {
+    const variance = base * 0.15; // 15% variance
+    const offset = (Math.sin(i * 2.7 + base) * variance);
+    return { timeMs: Math.max(10, Math.round(base + offset)), scramble: mockScramble(i), isBest: false, isWorst: false };
+  });
+  if (solves.length > 1) {
+    let bestIdx = 0, worstIdx = 0;
+    solves.forEach((s, i) => {
+      if (s.timeMs < solves[bestIdx].timeMs) bestIdx = i;
+      if (s.timeMs > solves[worstIdx].timeMs) worstIdx = i;
+    });
+    if (bestIdx !== worstIdx) {
+      solves[bestIdx].isBest = true;
+      solves[worstIdx].isWorst = true;
+    }
+  }
+  return solves;
+}
+
+function mockScramble(seed: number): string {
+  const moves = ["R", "U", "F", "L", "D", "B"];
+  const mods = ["", "'", "2"];
+  let s = "";
+  let last = "";
+  for (let i = 0; i < 20; i++) {
+    let m: string;
+    do { m = moves[(seed * 7 + i * 3) % moves.length]; } while (m === last);
+    last = m;
+    s += m + mods[(seed * 11 + i * 5) % mods.length] + " ";
+  }
+  return s.trim();
+}
+
+function SolveRow({ solve, index }: { solve: { timeMs: number; scramble: string; isBest: boolean; isWorst: boolean }; index: number }) {
+  return (
+    <div className="flex items-baseline gap-3 py-1">
+      <span className="text-[10px] text-muted-foreground w-4 text-right shrink-0">{index + 1}.</span>
+      <span className={`font-mono tabular-nums text-xs shrink-0 ${
+        solve.isBest ? "text-emerald-400" : solve.isWorst ? "text-red-400" : "text-foreground"
+      }`}>
+        {solve.isBest || solve.isWorst ? `(${formatTime(solve.timeMs)})` : formatTime(solve.timeMs)}
+      </span>
+      <span className="text-[11px] text-muted-foreground font-mono truncate">
+        {solve.scramble}
+      </span>
+    </div>
+  );
+}
+
+function StatDetail({ label, parentValue }: { label: string; parentValue: number }) {
+  const solves = getMockSolves(label, parentValue);
+  const [showAll, setShowAll] = useState(false);
+
+  if (label === "Single") {
+    return (
+      <div className="mt-4 pt-3 border-t border-border/30">
+        <SolveRow solve={solves[0]} index={0} />
+      </div>
+    );
+  }
+
+  const previewCount = 12;
+  const hasMore = solves.length > previewCount;
+  const visible = hasMore && !showAll ? solves.slice(0, previewCount) : solves;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-border/30">
+      <div className="space-y-0">
+        {visible.map((solve, i) => (
+          <SolveRow key={i} solve={solve} index={i} />
+        ))}
+      </div>
+      {hasMore && !showAll && (
+        <button
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors mt-2 cursor-pointer"
+          onClick={() => setShowAll(true)}
+        >
+          View all {solves.length} solves
+        </button>
+      )}
+      {showAll && (
+        <button
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors mt-2 cursor-pointer"
+          onClick={() => setShowAll(false)}
+        >
+          Show less
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** Cubie icon from /public/cubie.svg with colored fills when liked. */
@@ -239,6 +361,7 @@ function updatePostInCache(
 function PostFooter({ post, onOpenComments }: { post: PostWithInteractions; onOpenComments: () => void; }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [likesOpen, setLikesOpen] = useState(false);
 
   const like = useMutation(trpc.post.likePost.mutationOptions({
     onMutate: async () => {
@@ -262,25 +385,82 @@ function PostFooter({ post, onOpenComments }: { post: PostWithInteractions; onOp
   const likePending = like.isPending || unlike.isPending;
 
   return (
-    <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
+    <div className="flex items-center gap-1 mt-2 -ml-2">
       <button
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors hover:bg-muted ${
-          post.liked ? "text-white" : "text-muted-foreground"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors hover:bg-muted ${
+          post.liked ? "text-foreground" : "text-muted-foreground"
         }`}
         disabled={likePending}
         onClick={() => post.liked ? unlike.mutate({ postId: post.id }) : like.mutate({ postId: post.id })}
       >
         <CubeIcon className={`w-4 h-4 ${post.liked ? "cube-pop" : ""}`} filled={post.liked} key={post.liked ? "liked" : "not-liked"} />
-        <span>{post.numLikes}</span>
+        {post.numLikes > 0 && (
+          <span
+            role="button"
+            tabIndex={0}
+            className="tabular-nums hover:underline"
+            onClick={(e) => { e.stopPropagation(); setLikesOpen(true); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setLikesOpen(true); } }}
+          >
+            {post.numLikes}
+          </span>
+        )}
       </button>
       <button
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         onClick={onOpenComments}
       >
         <MessageCircle className="w-4 h-4" />
         {post.numComments > 0 && <span>{post.numComments}</span>}
       </button>
+
+      <LikesDialog postId={post.id} open={likesOpen} onOpenChange={setLikesOpen} />
     </div>
+  );
+}
+
+function LikesDialog({ postId, open, onOpenChange }: { postId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const trpc = useTRPC();
+  const { data: users, isLoading } = useQuery({
+    ...trpc.post.getPostLikes.queryOptions({ postId }),
+    enabled: open,
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm max-h-[60vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Likes</DialogTitle>
+          <DialogDescription className="sr-only">People who liked this post</DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !users?.length ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No likes yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {users.map((user) => (
+                <Link
+                  key={user.id}
+                  href={`/profile/${user.username}`}
+                  className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted transition-colors"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <UserAvatar user={user} size="sm" rounded="full" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{user.username}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.firstName} {user.lastName}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -348,7 +528,7 @@ function CommentsModal({ post, open, onOpenChange }: { post: PostWithInteraction
 
         {/* Caption */}
         {post.caption && (
-          <p className="text-sm leading-relaxed break-all">{post.caption}</p>
+          <p className="text-sm leading-relaxed break-words">{post.caption}</p>
         )}
 
         {/* Comments list */}
@@ -360,19 +540,27 @@ function CommentsModal({ post, open, onOpenChange }: { post: PostWithInteraction
               <div key={comment.id} className="flex items-start gap-2 group">
                 <UserAvatar user={comment.user} size="sm" rounded="full" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm break-all">
+                  <p className="text-sm break-words">
                     <span className="font-semibold mr-1.5">{comment.user.username}</span>
                     {comment.body}
                   </p>
                   <span className="text-[10px] text-muted-foreground">{timeAgo(comment.createdAt)}</span>
                 </div>
                 {comment.user.id === viewer.id && (
-                  <button
-                    className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-red-500 transition-all"
-                    onClick={() => deleteComment.mutate({ commentId: comment.id })}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-foreground transition-all">
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-red-500 focus:text-red-500"
+                        onClick={() => deleteComment.mutate({ commentId: comment.id })}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
             ))
@@ -389,7 +577,7 @@ function CommentsModal({ post, open, onOpenChange }: { post: PostWithInteraction
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Add a comment..."
               maxLength={200}
-              className="flex-1 bg-muted rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex-1 bg-muted rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-border"
             />
             <button
               type="submit"

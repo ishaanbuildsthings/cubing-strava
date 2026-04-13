@@ -114,6 +114,51 @@ export const postRouter = createTRPCRouter({
       };
     }),
 
+  getPost: authedProcedure
+    .input(z.object({ postId: z.string().min(1).max(50) }))
+    .query(async ({ ctx, input }) => {
+      const post = await ctx.prisma.practicePost.findUnique({
+        where: { id: input.postId },
+        include: {
+          user: true,
+          event: true,
+          likes: { where: { userId: ctx.viewer.userId }, select: { id: true } },
+          comments: {
+            include: { user: { select: { id: true, username: true, profilePictureUrl: true, firstName: true, lastName: true } } },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+
+      return {
+        ...practicePostToIPracticePost(post),
+        liked: post.likes.length > 0,
+        comments: post.comments.map((c) => ({
+          id: c.id,
+          user: c.user,
+          body: c.body,
+          createdAt: c.createdAt,
+        })),
+      };
+    }),
+
+  getPostLikes: authedProcedure
+    .input(z.object({ postId: z.string().min(1).max(50) }))
+    .query(async ({ ctx, input }) => {
+      const likes = await ctx.prisma.postLike.findMany({
+        where: { postId: input.postId },
+        include: {
+          user: {
+            select: { id: true, username: true, firstName: true, lastName: true, profilePictureUrl: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return likes.map((l) => l.user);
+    }),
+
   likePost: authedProcedure
     .input(z.object({ postId: z.string().min(1).max(50) }))
     .mutation(async ({ ctx, input }) => {
