@@ -9,7 +9,7 @@ import { publicEnv } from "@/lib/env";
 import { toast } from "sonner";
 import { useSettings } from "@/lib/context/settings";
 
-import { ExternalLink, Puzzle, Trophy, Search, ArrowRightLeft, Loader2 } from "lucide-react";
+import { ExternalLink, Puzzle, Search, ArrowRightLeft, Loader2 } from "lucide-react";
 import { InfoTooltip } from "@/lib/components/info-tooltip";
 import Link from "next/link";
 import { UserAvatar } from "@/lib/components/user-avatar";
@@ -614,7 +614,6 @@ function AchievementsTab({ user }: { user: IUser }) {
       {/* Medal Table */}
       <section>
         <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Trophy className="w-4 h-4" />
           Medals
           <InfoTooltip>Compete in the daily tournament to collect medals.</InfoTooltip>
         </h2>
@@ -647,7 +646,6 @@ function AchievementsTab({ user }: { user: IUser }) {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-            <Trophy className="w-4 h-4" />
             Personal Bests
             <InfoTooltip>Personal bests are only logged when you make a post.</InfoTooltip>
           </h2>
