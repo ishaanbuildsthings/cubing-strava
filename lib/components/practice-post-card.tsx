@@ -5,7 +5,7 @@ import { type IPracticePost } from "@/lib/transforms/post";
 import { EVENT_MAP, type CubeEvent } from "@/lib/cubing/events";
 import { EventIcon } from "@/lib/components/event-icon";
 import { UserAvatar } from "@/lib/components/user-avatar";
-import { formatTime, timeAgo } from "@/lib/cubing/format";
+import { formatTime, timeAgo, getBestAndWorst } from "@/lib/cubing/format";
 import { effectiveTime, type StatSolve } from "@/lib/cubing/stats";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -247,19 +247,9 @@ function SolveRow({ solve, index, isBest, isWorst }: { solve: StatSolve; index: 
 function StatDetail({ label, solves }: { label: string; solves: StatSolve[] }) {
   const [showAll, setShowAll] = useState(false);
 
-  // Compute best/worst indices for averages (trim highlighting)
-  let bestIdx = -1;
-  let worstIdx = -1;
-  if (solves.length > 1) {
-    const times = solves.map((s) => effectiveTime({ timeMs: s.time, penalty: (s.penalty as "plus_two" | "dnf" | null) }));
-    bestIdx = 0;
-    worstIdx = 0;
-    times.forEach((t, i) => {
-      if (t < times[bestIdx]) bestIdx = i;
-      if (t > times[worstIdx]) worstIdx = i;
-    });
-    if (bestIdx === worstIdx) { bestIdx = -1; worstIdx = -1; }
-  }
+  const { bestIdx, worstIdx } = getBestAndWorst(
+    solves.map((s) => ({ timeMs: s.time, penalty: (s.penalty as "plus_two" | "dnf" | null) }))
+  );
 
   if (label === "Single") {
     return (
