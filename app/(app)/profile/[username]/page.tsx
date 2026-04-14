@@ -743,9 +743,9 @@ function ProfilePosts({ userId }: { userId: string }) {
 
   if (posts.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-4">
-        No posts yet.
-      </p>
+      <div className="flex flex-1 items-center justify-center py-16">
+        <p className="text-sm text-muted-foreground">No posts yet.</p>
+      </div>
     );
   }
 
