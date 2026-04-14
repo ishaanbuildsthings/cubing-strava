@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { useSettings } from "@/lib/context/settings";
+import { Check } from "lucide-react";
 import { type IUser } from "@/lib/transforms/user";
 
 /** Full-size follow button used on profile pages. Fetches isFollowing state. */
@@ -86,25 +87,66 @@ export function CompactFollowButton({ userId }: { userId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { accent } = useSettings();
-  const [hidden, setHidden] = useState(false);
+  const [state, setState] = useState<"idle" | "pending" | "confirmed" | "hidden">("idle");
 
   const follow = useMutation(trpc.user.follow.mutationOptions({
+    onMutate: () => setState("pending"),
     onSuccess: () => {
-      setHidden(true);
-      // Invalidate feed so the post won't appear as suggested on next fetch
-      queryClient.invalidateQueries({ queryKey: [["post", "getFeed"]] });
+      setState("confirmed");
+      // Surgically clear isSuggested on ALL posts by this user in the cache
+      // so their other posts in the feed also lose the Follow button.
+      // No full refetch = no flash.
+      queryClient.setQueriesData<{ pages: { posts: { user: { id: string }; isSuggested?: boolean }[] }[] }>(
+        { queryKey: [["post", "getFeed"]] },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((p) =>
+                p.user.id === userId ? { ...p, isSuggested: false } : p
+              ),
+            })),
+          };
+        }
+      );
     },
+    onError: () => setState("idle"),
   }));
 
-  if (hidden) return null;
+  // After showing "Followed" confirmation, fade out after 1.2s
+  useEffect(() => {
+    if (state !== "confirmed") return;
+    const t = setTimeout(() => setState("hidden"), 1200);
+    return () => clearTimeout(t);
+  }, [state]);
+
+  if (state === "hidden") return null;
 
   return (
     <button
-      className={`px-2.5 py-1 text-xs font-bold rounded transition-all ${accent.bg} text-white ${accent.hover} ${accent.shadow}`}
-      disabled={follow.isPending}
+      className={`min-w-[4.5rem] px-2.5 py-1 text-xs font-bold rounded transition-all duration-300 ${
+        state === "confirmed"
+          ? "bg-neutral-600 text-foreground shadow-[0_2px_0_0_#1a1a1a] opacity-60"
+          : `${accent.bg} text-white ${accent.hover} ${accent.shadow}`
+      }`}
+      disabled={state !== "idle"}
       onClick={() => follow.mutate({ userId })}
     >
-      {follow.isPending ? "..." : "Follow"}
+      {state === "pending" && (
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          Follow
+        </span>
+      )}
+      {state === "confirmed" && (
+        <span className="inline-flex items-center gap-1">
+          <Check className="w-3 h-3" />
+          Followed
+        </span>
+      )}
+      {state === "idle" && "Follow"}
     </button>
   );
 }
