@@ -253,6 +253,11 @@ model RaceRoom {
   eventId       String
   scrambleSetId String
   status        RaceRoomStatus  @default(open)
+  public        Boolean         @default(false)
+  name          String?         // Display name for public rooms (e.g. "Sub-8 3x3 Grind")
+  description   String?         // Optional description / rules
+  maxTimeMs     Int?            // WCA official average cap to join (e.g. 800 = sub-8s). Null = open to all.
+  maxTimeEvent  String?         // Event the cap applies to (e.g. "333"). Null = same as room event.
   createdAt     DateTime        @default(now())
   closedAt      DateTime?
 

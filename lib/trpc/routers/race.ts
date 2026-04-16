@@ -117,6 +117,9 @@ export const raceRouter = createTRPCRouter({
         hostId: room.hostId,
         eventName: room.event.name,
         status: room.status,
+        public: room.public,
+        name: room.name,
+        maxTimeMs: room.maxTimeMs,
         scrambles: room.scrambleSet.scrambles as string[],
         scrambleSetId: room.scrambleSet.id,
         participants: room.participants.map((p) => ({
@@ -163,6 +166,26 @@ export const raceRouter = createTRPCRouter({
 
       return { success: true };
     }),
+
+  listPublicRooms: authedProcedure.query(async ({ ctx }) => {
+    const rooms = await ctx.prisma.raceRoom.findMany({
+      where: { public: true, status: "open" },
+      include: {
+        event: true,
+        _count: { select: { participants: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return rooms.map((r) => ({
+      code: r.code,
+      name: r.name,
+      description: r.description,
+      eventName: r.event.name,
+      maxTimeMs: r.maxTimeMs,
+      participantCount: r._count.participants,
+    }));
+  }),
 
   closeRoom: authedProcedure
     .input(z.object({ code: z.string().length(5) }))
