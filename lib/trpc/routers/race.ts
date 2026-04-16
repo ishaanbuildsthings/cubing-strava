@@ -95,7 +95,7 @@ export const raceRouter = createTRPCRouter({
         }
 
         const data = await res.json();
-        const records = data?.person?.personal_records?.[checkEvent];
+        const records = data?.personal_records?.[checkEvent];
         const officialAvg = records?.average?.best as number | undefined;
 
         if (!officialAvg || officialAvg > room.maxTimeMs) {
