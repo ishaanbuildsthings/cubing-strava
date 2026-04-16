@@ -30,6 +30,8 @@ model User {
   postLikes         PostLike[]
   postComments      PostComment[]
   medals            Medal[]
+  hostedRaceRooms   RaceRoom[]
+  raceParticipants  RaceParticipant[]
 }
 
 model Event {
@@ -42,6 +44,7 @@ model Event {
   tournamentEntries TournamentEntry[]
   practicePosts     PracticePost[]
   medals            Medal[]
+  raceRooms         RaceRoom[]
 }
 
 
@@ -112,6 +115,7 @@ model ScrambleSet {
   entries       TournamentEntry[]
   solves        Solve[]
   practicePosts PracticePost[]
+  raceRooms     RaceRoom[]
 
   // One scramble set per event per tournament.
   @@unique([tournamentId, eventId])
@@ -235,4 +239,39 @@ model Medal {
   event      Event      @relation(fields: [eventId], references: [id])
 
   @@unique([tournamentId, eventId, type])
+}
+
+enum RaceRoomStatus {
+  open
+  closed
+}
+
+model RaceRoom {
+  id            String          @id @default(cuid())
+  code          String          @unique
+  hostId        String
+  eventId       String
+  scrambleSetId String
+  status        RaceRoomStatus  @default(open)
+  createdAt     DateTime        @default(now())
+  closedAt      DateTime?
+
+  host          User            @relation(fields: [hostId], references: [id])
+  event         Event           @relation(fields: [eventId], references: [id])
+  scrambleSet   ScrambleSet     @relation(fields: [scrambleSetId], references: [id])
+  participants  RaceParticipant[]
+}
+
+model RaceParticipant {
+  id       String    @id @default(cuid())
+  roomId   String
+  userId   String
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+  results  Json?     // Solve snapshots for posting
+
+  room     RaceRoom  @relation(fields: [roomId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId])
 }
