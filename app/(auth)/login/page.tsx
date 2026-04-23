@@ -85,7 +85,7 @@ export default function LoginPage() {
 
         <button
           type="button"
-          disabled={loading || signupDisabled}
+          disabled={loading}
           onClick={async () => {
             setError(null);
             setLoading(true);
