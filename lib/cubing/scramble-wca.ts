@@ -1,5 +1,3 @@
-"use client";
-
 import { randomScrambleForEvent } from "cubing/scramble";
 import { CubeEvent } from "./events";
 import { generateScramble as generateScrambleFallback } from "./scramble";
@@ -16,7 +14,7 @@ export async function generateScrambleAsync(event: CubeEvent): Promise<string> {
     return alg.toString();
   } catch {
     // Fall back to the simple random-move scrambler if cubing.js fails
-    // (e.g. WASM not yet loaded, unsupported event, network issue).
+    // (e.g. WASM not yet loaded, unsupported event, worker issue).
     return generateScrambleFallback(event);
   }
 }

@@ -2,7 +2,7 @@
 
 import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { generateScrambleAsync } from "@/lib/cubing/scramble-client";
+import { generateScrambleAsync } from "@/lib/cubing/scramble-wca";
 import {
   addSolve,
   clearSolves,
