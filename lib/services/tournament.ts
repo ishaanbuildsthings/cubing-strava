@@ -2,7 +2,7 @@ import type { PrismaClient } from "@/app/generated/prisma/client";
 import type { ViewerContext } from "@/lib/viewer-context";
 import { NotFoundError } from "@/lib/errors";
 import { getCurrentTournamentDatePST } from "@/lib/tournament/date";
-import { generateScramble } from "@/lib/cubing/scramble";
+import { generateScrambleAsync } from "@/lib/cubing/scramble-wca";
 import { EVENT_CONFIGS } from "@/lib/cubing/events";
 
 export type ServiceContext = {
@@ -89,6 +89,21 @@ export function tournamentService(ctx: ServiceContext) {
       const dbEvents = await prisma.event.findMany();
       const eventNameToId = new Map(dbEvents.map((e) => [e.name, e.id]));
 
+      // Generate all scrambles in parallel BEFORE the transaction —
+      // cubing.js random-state scrambles can take hundreds of ms each,
+      // and doing ~67 of them serially inside a transaction would time out.
+      const scrambleSets = await Promise.all(
+        EVENT_CONFIGS.filter((ec) => eventNameToId.has(ec.id)).map(async (eventConfig) => ({
+          eventConfig,
+          dbEventId: eventNameToId.get(eventConfig.id)!,
+          scrambles: await Promise.all(
+            Array.from({ length: eventConfig.tournamentSolveCount }, () =>
+              generateScrambleAsync(eventConfig.id)
+            )
+          ),
+        }))
+      );
+
       // Use a try/catch for the race condition — if another request
       // creates it first, the unique constraint on datePST catches it.
       try {
@@ -101,16 +116,8 @@ export function tournamentService(ctx: ServiceContext) {
             data: { datePST: todayPST, number: nextNumber },
           });
 
-          // Create scramble sets for all events.
-          for (const eventConfig of EVENT_CONFIGS) {
-            const dbEventId = eventNameToId.get(eventConfig.id);
-            if (!dbEventId) continue; // Skip if event not in DB
-
-            const scrambles: string[] = [];
-            for (let i = 0; i < eventConfig.tournamentSolveCount; i++) {
-              scrambles.push(generateScramble(eventConfig.id));
-            }
-
+          // Write pre-generated scramble sets.
+          for (const { dbEventId, scrambles } of scrambleSets) {
             await tx.scrambleSet.create({
               data: {
                 eventId: dbEventId,
