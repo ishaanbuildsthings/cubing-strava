@@ -100,15 +100,19 @@ function getSolvesForStat(
 function StatDetailModal({
   detail,
   onClose,
+  onPost,
   solves,
   accent,
 }: {
   detail: { stat: StatType; variant: "current" | "best" };
   onClose: () => void;
+  onPost: () => void;
   solves: import("./idb").Solve[];
   accent: ReturnType<typeof import("@/lib/context/settings").useSettings>["accent"];
 }) {
+  // Solves come newest-first; display them chronologically (most recent last).
   const windowSolves = getSolvesForStat(solves, detail.stat, detail.variant);
+  const orderedSolves = [...windowSolves].reverse();
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
@@ -127,9 +131,9 @@ function StatDetailModal({
   // ao5/ao12: 1 best + 1 worst; ao100: 5 best + 5 worst; mo3: none (straight mean).
   const trimmedIndices = new Set<number>();
   const windowSize = WINDOW_SIZES[detail.stat];
-  if (windowSize && detail.stat !== "mo3" && windowSolves.length >= windowSize) {
+  if (windowSize && detail.stat !== "mo3" && orderedSolves.length >= windowSize) {
     const trimCount = detail.stat === "ao100" ? 5 : 1;
-    const indexed = windowSolves.map((s, i) => ({ i, t: effectiveTime(s) }));
+    const indexed = orderedSolves.map((s, i) => ({ i, t: effectiveTime(s) }));
     const sorted = [...indexed].sort((a, b) => a.t - b.t);
     for (let j = 0; j < trimCount; j++) trimmedIndices.add(sorted[j].i);
     for (let j = sorted.length - trimCount; j < sorted.length; j++) trimmedIndices.add(sorted[j].i);
@@ -175,32 +179,40 @@ function StatDetailModal({
           <DialogDescription>
             {windowSolves.length} solve{windowSolves.length !== 1 ? "s" : ""}
           </DialogDescription>
-          {windowSolves.length > 0 && (
+          <div className="flex gap-2">
+            {windowSolves.length > 0 && (
+              <button
+                className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded transition-colors w-fit ${
+                  copiedAll
+                    ? "bg-green-500/10 text-green-500"
+                    : `bg-muted hover:bg-muted/80 text-muted-foreground`
+                }`}
+                onClick={() => {
+                  const text = orderedSolves
+                    .map((s, i) => `${i + 1}. ${formatSolveTime(s)}   ${s.scramble}`)
+                    .join("\n");
+                  navigator.clipboard.writeText(`${title}\n\n${text}`);
+                  setCopiedAll(true);
+                  setTimeout(() => setCopiedAll(false), 1500);
+                }}
+              >
+                {copiedAll ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copiedAll ? "Copied" : "Copy all"}
+              </button>
+            )}
             <button
-              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded transition-colors w-fit ${
-                copiedAll
-                  ? "bg-green-500/10 text-green-500"
-                  : `bg-muted hover:bg-muted/80 text-muted-foreground`
-              }`}
-              onClick={() => {
-                const text = windowSolves
-                  .map((s, i) => `${i + 1}. ${formatSolveTime(s)}   ${s.scramble}`)
-                  .join("\n");
-                navigator.clipboard.writeText(`${title}\n\n${text}`);
-                setCopiedAll(true);
-                setTimeout(() => setCopiedAll(false), 1500);
-              }}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded transition-colors w-fit ${accent.bg} text-white ${accent.hover}`}
+              onClick={onPost}
             >
-              {copiedAll ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-              {copiedAll ? "Copied" : "Copy all"}
+              <FilePen className="w-3 h-3" /> Post
             </button>
-          )}
+          </div>
         </DialogHeader>
         {windowSolves.length === 0 ? (
           <p className="text-sm text-muted-foreground">Not enough solves.</p>
         ) : (
           <div className="space-y-1 overflow-y-auto min-h-0 flex-1 pr-3">
-            {windowSolves.map((solve, i) => {
+            {orderedSolves.map((solve, i) => {
               const trimmed = trimmedIndices.has(i);
               return (
                 <div
@@ -1083,6 +1095,7 @@ export default function TimerPage() {
           <StatDetailModal
             detail={statDetail}
             onClose={() => setStatDetail(null)}
+            onPost={() => { setStatDetail(null); openPostModal(); }}
             solves={solves}
             accent={accent}
           />
